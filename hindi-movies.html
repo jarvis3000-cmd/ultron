@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Hindi Movies</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <!-- hls.js for playing .m3u8 in browsers that support MediaSource -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.1/dist/hls.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    
+    :root {
+      --primary: #ffcc00;
+      --secondary: #111827;
+      --accent: #f59e0b;
+      --muted: #9CA3AF;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    
+    .movie-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: center;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .movie-card:hover {
+      transform: translateY(-8px) scale(1.03);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .search-input {
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+    
+    .search-input:focus {
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.5);
+    }
+    
+    .header-glow {
+      text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+    }
+    
+    .movie-poster {
+      aspect-ratio: 2/3;
+      transition: transform 0.5s ease;
+    }
+    
+    .movie-card:hover .movie-poster {
+      transform: scale(1.05);
+    }
+    
+    .category-tab {
+      transition: all 0.3s ease;
+    }
+    
+    .category-tab:hover {
+      transform: translateY(-2px);
+    }
+    
+    .category-tab.active {
+      background-color: var(--primary);
+      color: var(--secondary);
+      font-weight: 600;
+    }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #1e293b;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #ffcc00;
+      border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #f59e0b;
+    }
+    
+    /* Animation */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-fade-in {
+      animation: fadeIn 0.6s ease forwards;
+    }
+    
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+    .delay-400 { animation-delay: 0.4s; }
+    
+    /* Illumination modal styles (responsive) */
+    .modal-backdrop { 
+      position:fixed; 
+      inset:0; 
+      background: rgba(0,0,0,0.9); 
+      display:none; 
+      align-items:center; 
+      justify-content:center; 
+      z-index:9999; 
+      padding: 0;
+    }
+    .modal-backdrop.active { display:flex; }
+    .modal-card { 
+      width: 100%;
+      height: 100%;
+      max-width: 980px;
+      max-height: 90vh;
+      border-radius: 0;
+      overflow: hidden;
+      background: #0b1220;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+      display: flex;
+      flex-direction: column;
+    }
+    .player-wrapper { 
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      background: #000;
+    }
+    #topCloseBtn { 
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 10;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+      transition: all 0.2s ease;
+    }
+    #topCloseBtn:hover {
+      background: rgba(0,0,0,0.9);
+      transform: scale(1.1);
+    }
+    .player-wrapper video, 
+    .player-wrapper iframe { 
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .player-meta { 
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 12px;
+      color: #ddd;
+      background: #0b1220;
+    }
+    .player-meta .meta-left { 
+      width: 100%;
+    }
+    .player-meta h3 { 
+      margin: 0;
+      font-size: 1.125rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .player-meta p { 
+      margin: 6px 0 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .controls-row { 
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn {
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      min-width: 60px;
+      flex: 1;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn:hover { 
+      background: rgba(254,209,65,0.06); 
+    }
+    .btn i {
+      font-size: 1rem;
+    }
+
+    /* Responsive adjustments */
+    @media (min-width: 768px) {
+      .modal-card {
+        width: 92%;
+        height: auto;
+        border-radius: 12px;
+        max-height: 80vh;
+      }
+      .player-wrapper {
+        padding-bottom: 56.25%;
+        height: 0;
+      }
+      .player-meta {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+      .player-meta .meta-left {
+        max-width: 65%;
+      }
+      .controls-row {
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+      }
+      .btn {
+        flex: 0;
+        min-width: auto;
+        padding: 8px 12px;
+      }
+      #topCloseBtn {
+        opacity: 0;
+      }
+      .player-wrapper:hover #topCloseBtn {
+        opacity: 1;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .btn {
+        padding: 8px;
+        font-size: 0;
+      }
+      .btn i {
+        font-size: 1rem;
+        margin: 0 !important;
+      }
+    }
+
+    
+
+    /* Modal legacy styles (unused) */
+    .modal-overlay { display:none; }
+    /* ============================
+   DESKTOP FIX — DOES NOT TOUCH MOBILE
+   ============================ */
+
+@media (min-width: 768px) {
+
+  /* Fix video height so it doesn't cover controls */
+  .player-wrapper {
+    padding-bottom: 0 !important;     /* remove forced 16:9 only on desktop */
+    height: auto !important;
+    max-height: 60vh !important;       /* safe video height */
+    position: relative !important;
+  }
+
+  /* Ensure iframe/video stays inside wrapper */
+  .player-wrapper video,
+  .player-wrapper iframe {
+    height: 100% !important;
+    max-height: 60vh !important;
+    position: relative !important;
+  }
+
+  /* Make sure controls are ALWAYS visible above video */
+  .player-meta {
+    position: relative !important;
+    z-index: 100 !important;
+    background: #0b1220 !important;      /* solid background for visibility */
+    padding-top: 10px !important;
+  }
+
+  /* Controls row layout */
+  .controls-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 12px !important;
+  }
+
+  /* Buttons behave normally */
+  .btn {
+    min-width: 95px !important;
+    padding: 10px 16px !important;
+    flex: unset !important;
+  }
+
+  /* Modal height adjustment to fit everything */
+  .modal-card {
+    max-height: 85vh !important;
+    overflow: visible !important;
+  }
+}
+
+/* ===== GRID VIEW TOGGLE ===== */
+
+/* Compact grid */
+.compact-grid {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+  gap: 14px !important;
+}
+
+/* List view */
+.list-grid {
+  grid-template-columns: 1fr !important;
+}
+
+.list-grid .movie-card {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.list-grid .movie-poster {
+  width: 120px;
+  aspect-ratio: 2/3;
+  flex-shrink: 0;
+}
+
+/* ===== FORCE COMPACT VIEW ON MOBILE ===== */
+@media (max-width: 640px) {
+
+  /* Override Tailwind grid-cols-2 */
+  #movies.compact-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  #movies.compact-grid .movie-card {
+    transform: none !important;
+  }
+
+  #movies.compact-grid .movie-poster {
+    aspect-ratio: 2 / 3;
+  }
+}
+
+
+
+
+  /* === SMART FULLSCREEN VIDEO FIX (NO CROPPING, NO GAPS WHEN POSSIBLE) === */
+video:fullscreen,
+video:-webkit-full-screen,
+iframe:fullscreen,
+iframe:-webkit-full-screen {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+
+  object-fit: contain !important;
+  background-color: black;
+}
+
+/* Only cover when video aspect is cinematic */
+@media (min-aspect-ratio: 16/9) {
+  video:fullscreen,
+  video:-webkit-full-screen,
+  iframe:fullscreen,
+  iframe:-webkit-full-screen {
+    object-fit: cover !important;
+  }
+}
+
+  </style>
+</head>
+<body class="relative">
+<!-- Floating stars background -->
+<div class="fixed inset-0 overflow-hidden -z-10">
+<div class="absolute inset-0 bg-gradient-to-b from-transparent to-black/80"></div>
+<div class="stars"></div>
+<div class="stars2"></div>
+</div>
+<div class="container mx-auto px-4 py-8 max-w-7xl">
+
+<!-- ================= HEADER ================= -->
+<header class="sticky top-0 z-50 bg-gradient-to-r from-black via-gray-900 to-black border-b border-yellow-500">
+  <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center items-stretch justify-between gap-4">
+
+
+    <!-- Logo + Title -->
+    <div class="flex items-center gap-4">
+      <img
+        src="https://www.shutterstock.com/image-vector/bollywood-neon-sign-bright-signboard-600nw-1351338800.jpg"
+        alt="Logo"
+        class="h-12 w-auto logo-animate"
+      />
+      <h1 class="text-2xl md:text-3xl font-bold text-yellow-400 glow-text whitespace-nowrap">
+        Hindi Movies
+      </h1>
+    </div>
+
+    <!-- Search + View Toggle -->
+<div class="relative w-full md:max-w-md flex items-center gap-3">
+  <div class="relative flex-1">
+    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-yellow-400"></i>
+    <input
+      id="searchBar"
+      type="text"
+      placeholder="Search movies..."
+      class="w-full pl-11 pr-4 py-2.5 rounded-lg bg-gray-900 text-white
+             border border-yellow-500 focus:outline-none
+             focus:ring-2 focus:ring-yellow-400 placeholder-yellow-400"
+    />
+  </div>
+
+  <!-- View Toggle Icon -->
+  <button
+    id="viewToggleBtn"
+    onclick="cycleView()"
+    title="Change View"
+    class="text-yellow-400 hover:text-yellow-300 transition flex-shrink-0">
+    <i id="viewToggleIcon" class="fas fa-th-large text-xl"></i>
+  </button>
+</div>
+
+
+
+  </div>
+</header>
+
+
+</div>
+</div>
+<!-- Movies Grid -->
+<div class="mb-12">
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6" id="movies"></div>
+</div>
+<!-- Footer / Social -->
+  <div class="border-t border-gray-800 mt-8 pt-6 text-center text-gray-500">
+    <a href="#" class="text-gray-400 hover:text-[#c0392b] transition px-2"><i class="fab fa-facebook-f"></i></a>
+    <a href="#" class="text-gray-400 hover:text-[#c0392b] transition px-2"><i class="fab fa-twitter"></i></a>
+    <a href="https://www.instagram.com/stark_4152/reels" class="text-gray-400 hover:text-[#c0392b] transition px-2"><i class="fab fa-instagram"></i></a>
+    <a href="https://www.youtube.com/channel/UCD9dGWVkAjrdm3D_7gkbi2g" class="text-gray-400 hover:text-[#c0392b] transition px-2"><i class="fab fa-youtube"></i></a>
+  </div>
+</div>
+
+<!-- === REPLACED: Illumination-style Modal Player === -->
+<div id="playbackModal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true">
+    <div class="player-wrapper" id="playerWrapper">
+      <!-- video or iframe injected here -->
+      <video id="modalVideo" controls playsinline style="width:100%;height:100%;background:#000"></video>
+      <button id="topCloseBtn" class="absolute top-4 right-4 z-10 bg-black/70 hover:bg-black/90 text-white rounded-full w-10 h-10 flex items-center justify-center transition">
+        <i class="fas fa-times text-xl"></i>
+      </button>
+    </div>
+
+    <div class="player-meta">
+      <div class="meta-left">
+        <h3 id="modalTitle">Title</h3>
+        <p id="modalDesc" class="text-sm"></p>
+      </div>
+      <div class="controls-row">
+        <button id="prevBtn" class="btn"><i class="fas fa-step-backward mr-2"></i>Prev</button>
+        <button id="back10Btn" class="btn"><i class="fas fa-rotate-left"></i> 10s</button>
+        <button id="forward10Btn" class="btn">10s <i class="fas fa-rotate-right"></i></button>
+        <button id="playPauseBtn" class="btn"><i class="fas fa-play mr-2"></i>Play</button>
+        <button id="nextBtn" class="btn">Next<i class="fas fa-step-forward ml-2"></i></button>
+        <button id="fullscreenBtn" class="btn"><i class="fas fa-expand"></i></button>
+        <button id="muteBtn" class="btn"><i class="fas fa-volume-up"></i></button>
+        <button id="closeBtn" class="btn"><i class="fas fa-times"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    /******************************
+     * Existing movies array (unchanged)
+     ******************************/
+    /* ===== FINAL VIEW CYCLER (MOBILE SAFE) ===== */
+let currentView = 0; // 0=grid, 1=compact, 2=list
+
+function cycleView() {
+  const grid = document.getElementById('movies');
+  const icon = document.getElementById('viewToggleIcon');
+
+  // reset
+  grid.className = 'grid gap-6';
+
+  if (currentView === 0) {
+    // COMPACT (works on mobile)
+    grid.classList.add(
+      'grid-cols-3',
+      'sm:grid-cols-4',
+      'md:grid-cols-5',
+      'lg:grid-cols-6'
+    );
+    icon.className = 'fas fa-border-all text-xl';
+    currentView = 1;
+  }
+  else if (currentView === 1) {
+    // LIST
+    grid.classList.add('grid-cols-1');
+    grid.classList.add('list-grid');
+    icon.className = 'fas fa-list text-xl';
+    currentView = 2;
+  }
+  else {
+    // DEFAULT GRID
+    grid.classList.add(
+      'grid-cols-2',
+      'sm:grid-cols-3',
+      'md:grid-cols-4',
+      'lg:grid-cols-5',
+      'xl:grid-cols-6'
+    );
+    icon.className = 'fas fa-th-large text-xl';
+    currentView = 0;
+  }
+}
+
+    const movies = [
+            { title: "Ikkis ", video: "https://lizer123.site:443/stream/bTN1OC80MS84NWFjNmZlYjU4NGI2NjVlODU2NjQ5NzRjNTQ2Y2ZlYy8xMDgwcC8xMDgwcC5tM3U4P2lkPQ==", image: "https://image.tmdb.org/t/p/w500/8PWu0V10nMqG5SrA13wLRXTD2fH.jpg", category: "other", year: 2026 },
+            { title: "120 Bahadur ", video: "https://lizer123.site:443/stream/bTN1OC80MS80OTlhM2Y4ODE1NmJiNjMyMWUwMGQwZmYwYWI1NTA0MS8xMDgwcC8xMDgwcC5tM3U4P2lkPQ==", image: "https://image.tmdb.org/t/p/w500/fdxf02vUous6fty6O4nollyuo4m.jpg", category: "other", year: 2025 },
+            { title: "Dhurandhar ", video: "https://sil5.evergreenconstruction.store:443/v4/c5u/casugr/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/8FHOtUpNIk5ZPEay2N2EY5lrxkv.jpg", category: "other", year: 2025 },
+            { title: "Raid ", video: "https://sdqm.aurorafieldenergy.sbs:443/v4/qu/rdjqv/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/qx3m9mRUmDZUVQeAe7CAzFX7xCB.jpg", category: "other", year: 2018 },
+            { title: "Raid 2 ", video: "https://sskt.stellarwaveventures.cyou:443/v4/ox/x6j6lq/index-f2-v1-a1.txt", image: "https://beyondbollywood.home.blog/wp-content/uploads/2025/05/img-20250430-wa00162500871613477375520.jpg?w=819", category: "other", year: 2025 },
+            { title: "Bhool Chuk Maaf", video: "https://stzm.seawindmarketing.space/v4/kdv/caaciz/index-f1-v1-a1.txt", image: "https://akm-img-a-in.tosshub.com/indiatoday/images/story/202505/bhool-chuk-maaf-release-hold-103235231-1x1_0.jpg?VersionId=tC4FIaNQ5KfBa06BafeHTwgmvItOufi4", category: "other", year: 2025 },
+            { title: "12th Fail ", video: "https://sxix.dreamoraacademy.site:443/v4/il/t1tae/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BNTE3OTIxZDYtNjA0NC00N2YxLTg1NGQtOTYxNmZkMDkwOWNjXkEyXkFqcGc@._V1_.jpg", category: "other", year: 2023 },
+            { title: "Drishyam ", video: "https://s8v3.ascentaestheticworks.store:443/v4/sc/sqmbz/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/gIClWRv5OSe8rl5Koi0AeUcCZ9Z.jpg", category: "other", year: 2015 },
+            { title: "Drishyam 2 ", video: "https://s9dz.azurafieldconsulting.sbs/v4/ty/vbjvs/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/yJNNwHQuKYNeHFbsxSFR6yK9Dda.jpg", category: "other", year: 2022 },
+            { title: "Chhaava ", video: "https://sh9f.valentrixcreations.space:443/v4/36/tagodp/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/ubRsrzb6NRW8YhVTJ6jG1kpNvCi.jpg", category: "other", year: 2025 },
+            { title: "Shaitaan ", video: "https://s5zt.marvellium.shop:443/v4/6s/betd1/index-f2-v1-a1.txt", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/oRvFzcagAcC6Q317xtV7QXzwBnj.jpg", category: "other", year: 2024 },
+            { title: "Vash Level 2 ", video: "https://drive.google.com/file/d/1vBCfqHyP5Zdz1UMx8JQ61fyPuyCjtbEQ/preview", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/uTZU5eG5Afs0CLO9DlYVDW5pnfS.jpg", category: "other", year: 2025 },
+            { title: "Rocketry: The Nambi Effect", video: "https://s5zt.inovara.cyou/v4/il/eokpd/index-f1-v1-a1.txt", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/o7A1agEoXvwyyOmIbHnUhfnC34j.jpg", category: "other", year: 2022 },
+            { title: "Jolly LLB )", video: "https://vip.opstream14.com/20230606/37329_04d5cfc6/index.m3u8", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/zmh8eBq0MdwqHl7NMyVOnAhNu7I.jpg", category: "other", year: 2013 },
+            { title: "Jolly LLB 2 ", video: "https://shkn.auronetworkpartners.shop/v4/9a/h5nhq/cf-master.txt?v=1735045408", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/n9MjoGmaYagaaETCQP0S6Ch3JLH.jpg", category: "other", year: 2017 },
+            { title: "Jolly LLB 3  ", video: "https://spuc.aurorafieldventures.shop:443/v4/rqz/ipy5sr/index-f2-v1-a1.txt", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/bwRoU9p5GvjxgPfmIgsfcJ4ydng.jpg", category: "other", year: 2025 },
+            { title: "Kantara ", video: "https://drive.google.com/file/d/1p4udmbzvo22frb5ZIJokbfFJeiUHk23q/preview", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/jIsKmkxMzdCZ0Ux1GVSnu8m6Na6.jpg", category: "other", year: 2022 },
+            { title: "Kantara: Chapter 1  ", video: "https://drive.google.com/file/d/1yFkiyeA02ss2oK_a3ToES8xuAWXxyLjf/preview", image: "https://upload.wikimedia.org/wikipedia/en/thumb/6/69/Kantara-_Chapter_1_poster.jpg/250px-Kantara-_Chapter_1_poster.jpg", category: "other", year: 2025 },
+            { title: "Kesari Chapter 2: The Untold Story of Jallianwala Bagh (2025)", video: "https://sbi6.marvellium.shop:443/v4/tab/r86paz/index-f2-v1-a1.txt", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/jgGSqe1YgSot6Y1zDVTVkbsZ46z.jpg", category: "other", year: 2025 },
+            { title: "Mahavatar Narsimha", video: "https://s6p9.marvellaholdings.sbs:443/v4/djx/xifufp/index-f2-v1-a1.txt", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/uGTF87VyfjtwwqRlT2apQg5YnEp.jpg", category: "other", year: 2025 },
+            { title: "Munjya ", video: "https://stzm.lumintrixagency.shop:443/v4/db/hefij/index-f2-v1-a1.txt", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/31zAzJs8O7dXcE0laUcBoaaNvwu.jpg", category: "other", year: 2024 },
+            { title: "Satya", video: "https://sojg.rivonamarketing.cyou:443/v4/js/mi6pwd/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w185/wua2Fq5MLqRMNC2azapa74CZ2z2.jpg", category: "other", year: 1998 },
+            { title: "Shootout at Lokhandwala", video: "https://www.youtube.com/embed/3ZiEDUqXzNE", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/6p8ddG6t8FzJTFNYODG27Er0Pdn.jpg", category: "other", year: 2007 },
+            { title: "Shootout at Wadala ", video: "https://www.youtube.com/embed/f7Zre4-Msbw", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/qFcNJCXd2G18ngq4rFq601MbqbZ.jpg", category: "other", year: 2013 },
+            { title: "Dus", video: "https://smeb.gameaddict.site:443/v4/ox/kfkd9/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/yGxt6OwPvstGA5EQlMwQqtaD3Vv.jpg", category: "other", year: 2005 },
+            { title: "Munna Bhai M.B.B.S.", video: "https://sskt.novavisioninvestment.online:443/v4/36/u9dg5/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/nZNUTxGsSB4nLEC9Bpa2xfu81qV.jpg", category: "other", year: 2003 },
+            { title: "Lage Raho Munna Bhai", video: "https://se9d.lumintrixagency.shop:443/v4/rw/c8ya6/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/lgSn1tXDstMXSHJYkSibKkHqW8y.jpg", category: "other", year: 2006 },
+            { title: "Jaane Tu... Ya Jaane Na", video: "https://sr81.neoventis.sbs:443/v4/ic/bnagv/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/iV1W0IEtQYuBnnxNmZxSmPHK3Pu.jpg", category: "other", year: 2008 },
+            { title: "Vicky Donor", video: "https://sskt.amberlineproductions.shop:443/v4/xq/6nzdw/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/u8AO7DgcVYkVSXeU7oQdlhMFwcN.jpg", category: "other", year: 2012 },
+            { title: "Newton", video: "https://sqtd.vyntrixconsultancy.sbs/v4/36/l5lkk/index-f2-v1-a1.txt", image: "https://assets-in.bmscdn.com/iedb/movies/images/mobile/thumbnail/xlarge/newton-et00052452-19-01-2017-02-43-05.jpg", category: "other", year: 2017 },
+            { title: "3 Idiots", video: "https://sskt.bluehavenhospitality.sbs:443/v4/np/br985/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/66A9MqXOyVFCssoloscw79z8Tew.jpg", category: "other", year: 2009 },
+            { title: "Ghajini", video: "https://sskt.silverforgeindustries.store:443/v4/rw/h6xdi/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/cPLzHxPFRjzNvoyncdtDGBAxjp.jpg", category: "other", year: 2008 },
+            { title: "Fashion", video: "https://sipt.alphastrahealth.store:443/v4/lf/xqh3f/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/6PQyJUJ3Ny1AZegtL5OkUATCIcr.jpg", category: "other", year: 2008 },
+            { title: "Andaz apna apna", video: "https://sskt.silverforgeindustries.store/v4/js/6r56f/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/l1tE1GspvcyeYSfKxmnh8DObnzG.jpg", category: "other", year: 1994 },
+            { title: "Dunki", video: "https://spok.mindspireeducation.cyou/v4/m9/vyt81/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/kPRb1mbVHGop0egQ7153y0lhzGL.jpg", category: "other", year: 2023 },
+            { title: "Delhi Belly", video: "https://sqtd.luminaryentertainment.shop:443/v4/np/mrpt5/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/7FMYqomLfFnVhsA7PnWX0GLEB0O.jpg", category: "other", year: 2011 },
+            { title: "Srikanth", video: "https://spuc.nuvistar.online/v4/rw/nteoc/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/nkWF1jIMQqWZSShNTAdBUqrdFsZ.jpg", category: "other", year: 2024 },
+            { title: "Sarfarosh", video: "https://sqtd.viatrix.space/v4/ck/8r6hr/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/i6XJCzajVcnfh5ljAn7AGub5vih.jpg", category: "other", year: 1999 },
+            { title: "New York", video: "https://s8v3.harmonynetworks.space/v4/ox/nbruq/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/yFp4MiFPNGPiLOnl5zZGnS13jAL.jpg", category: "other", year: 2009 },
+            { title: "Bhool Bhulaiyaa", video: "https://s6p9.mindspireeducation.cyou:443/v4/sc/i68au/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/soRW3p4GlPphHiFkwbqYGrodQ5S.jpg", category: "other", year: 2007 },
+            { title: "Crew", video: "https://sdqm.horizenbuild.online:443/v4/rw/ms5wi/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/8mnCtQngfhYt0W0BmkrCePutmvy.jpg", category: "other", year: 2024 },
+            { title: "Company", video: "https://spuc.futureverseinsights.shop:443/v4/6s/3yii9/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/1A2J7bYryOmBVBU8qpTs3fta0hv.jpg", category: "other", year: 2002 },
+            { title: "Black Friday ", video: "https://www.youtube.com/embed/aYqu9KlgRVs", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQzepL9hXzPpevavP74vsreQyz0IFXBAnp8bQ&s", category: "other", year: 2004 },
+            { title: "Ab Tak Chhappan ", video: "https://www.youtube.com/embed/rNg6u84TpSc", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/bwN5saWw7PvlZxkkPPZMAE9OKUh.jpg", category: "other", year: 2004 },
+            { title: "Ab Tak Chhappan 2 ", video: "https://www.youtube.com/embed/wT00vL09Mdw", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/acRIouyjmxO9UwKtFSHslUU192Z.jpg", category: "other", year: 2015 },
+            { title: "Gangaajal", video: "https://www.youtube.com/embed/tM_8L85lVu4", image: "https://image.tmdb.org/t/p/w500/hYgMIlRddxXV7WaVLy6QvGy5RPM.jpg", category: "other", year: 2003 },
+            { title: "Apaharan", video: "https://www.youtube.com/embed/3wnGWEz2e0c", image: "https://image.tmdb.org/t/p/w500/gZbY2w5NKuJZ8XBmIPZnG2P7X5L.jpg", category: "other", year: 2005 },
+            { title: "Sarkar", video: "https://s5zt.ironbrookbuilders.cyou:443/v4/36/dydyf/index-f2-v1-a1.txt", image: "https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p89531_p_v10_aa.jpg", category: "other", year: 2005 },
+            { title: "Gangs Of Wasseypur", video: "https://sipt.aurorafieldventures.shop/v4/61/mdw3n/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/xAy208Znkingmfnb5ZbULwLyIwW.jpg", category: "other", year: 2012 },
+            { title: "Tehran ", video: "https://sqtd.aurorionmarketing.sbs:443/v4/djx/6swhhr/index-f2-v1-a1.txt", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/gbz9Y1NwnlE2GxXmgWTKZC1fste.jpg", category: "other", year: 2025 },
+            { title: "Madras Cafe ", video: "https://sbi6.omniquestsolutions.shop:443/v4/61/kvnng/index-f2-v1-a1.txt", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/3cfFqEuj2ynHUb0FTBThTh0gQB9.jpg", category: "other", year: 2013 },
+            { title: "Section 375", video: "https://sojg.lunetrix.store/v4/x6b/poarfg/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/x7rVZ0KiPWxBMJBI8roIwlMvs2c.jpg", category: "other", year: 2019 },
+            { title: "Raazi", video: "https://sj3l.crystalhavenresearch.shop:443/v4/xq/hclxn/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/fF2xXApETxZqyluokyJ1x4gIiTf.jpg", category: "other", year: 2018 },
+            { title: "The Sabarmati Report ", video: "https://s6p9.aqualisnetworkmedia.store/v4/ic/xxxla/index-f2-v1-a1.txt", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/ahOWjoqGkpxpmJVPmEBkSyvLPfi.jpg", category: "other", year: 2024 },
+            { title: "Swatantrya Veer Savarkar ", video: "https://drive.google.com/file/d/1Dw5kD3XIfbM58LT_W_aG_n09vyZhdjqi/preview", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/3MRZg94TNfdim6bnigrvUhqqoaM.jpg", category: "other", year: 2024 },
+            { title: "Article 370", video: "https://silu.hushfieldproductions.space/v4/us/epsu1w/index-f2-v1-a1.txt", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/9VTemjHMpyxzfC3JsG2aFy8Bf9Y.jpg", category: "other", year: 2024 },
+            { title: "Uri: The Surgical Strike", video: "https://stzm.claravonartistrylab.store:443/v4/sc/nyq1y/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/yNySAgpAnWmPpYinim9E0tUzJWG.jpg", category: "other", year: 2019 },
+            { title: "The Kashmir Files", video: "https://se9d.skylineforge.space/v4/il/8w8v1/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/2VvjJFDBFYkVgr89BjqbUl26QyW.jpg", category: "other", year: 2022 },
+            { title: "The Tashkent Files", video: "https://sdqm.zenithwellbeing.site/v4/ek/emxrc/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/rIIERAso7BYRvfMU8zqmnYLpm8D.jpg", category: "other", year: 2019 },
+            { title: "HAQ", video: "https://mega.nz/embed/u0oFAKzQ#MYgA_fqUa91ji8lq_xc4yX_4P_EprFhJZlVNlm-Iwu4", image: "https://image.tmdb.org/t/p/w500/yXD9TP4Ri0iAQ57GpJU8jF82mQf.jpg", category: "other", year: 2025 },
+            { title: "The Vaccine War", video: "https://sskt.novaquestfashion.site:443/v4/m9/holu3/index-f2-v1-a1.txt", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/ceWCWvbEogkXU1It8gH1l2rcfEJ.jpg", category: "other", year: 2023 },
+            { title: "Coolie", video: "https://drive.google.com/file/d/1-AH0_2lyVuyVdnbdTemC3czCShxLfV7x/preview", image: "https://wsrv.nl/?url=https://image.tmdb.org/t/p/w780/kr36awqmziEI5mfUElsHB0pj9zP.jpg", category: "other", year: 2025 },
+            { title: "The Taj Story", video: "https://lizer123.site/stream/bTN1OC80MS8xYzU5YTNjMjE1MzcyNzVlNjI1YmM5ZmI1ZDMzMzhkNy8xMDgwcC8xMDgwcC5tM3U4P2lkPQ==", image: "https://all.web.img.acsta.net/img/30/d5/30d5297ca30c77302892b2a757f28299.jpg", category: "other", year: 2025 },
+            { title: "Bhaag Milkha Bhaag", video: "https://sbi6.halcyonfinancialgroup.online/v4/61/5ippb/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/bXywc0CEzS1fIshPWWi4V8A58U3.jpg", category: "other", year: 2013 },
+            { title: "Aiyaary", video: "https://slob.xylonadynamics.cyou:443/v4/m9/kk5nd/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/1lfpxWPKRN9GOCdad5XhdxWuS3U.jpg", category: "other", year: 2018 },
+            { title: "Gold", video: "https://slob.glimmerpathfashion.cyou:443/v4/9a/66dga/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/xCcdW6nHRcrKWraErYV5g3tut7Q.jpg", category: "other", year: 2018 },
+            { title: "Airlift", video: "https://slob.fiorellagardenshop.shop/v4/db/m8fzv/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/oyaxIm3kTWDQtcYQ45eN5sZ6WIz.jpg", category: "other", year: 2016 },
+            { title: "Swades", video: "https://s6sy.pavonilaboratories.cyou:443/v4/9a/ce11w/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/yUSL24kpHc9Nls4Pohia4shgcIM.jpg", category: "other", year: 2004 },
+            { title: "Chak De! India", video: "https://smeb.silverpathway.sbs:443/v4/db/qjbra/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/9wP26QtbLUADWsfZZ8v2sJDWKdZ.jpg", category: "other", year: 2007 },
+            { title: "A Wednesday!", video: "https://sj3l.northfieldgroup.store/v4/ck/chxdl/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/gVUSxtJM3arL5VIUIRNYde20EF0.jpg", category: "other", year: 2008 },
+            { title: "Tiranga", video: "https://sxic.clarionworkshub.store:443/v4/ox/k5sa8/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/zA8lbSRKUpmCcHmD4WE8SUloTKa.jpg", category: "other", year: 1993 },
+            { title: "Border", video: "https://sdqm.marvellaworldwide.shop:443/v4/sc/6rkuq/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w185/vYih9kPSCh6CrJsZFWugXOY0ySj.jpg", category: "other", year: 1997 },
+            { title: "Border 2", video: "https://main-mp4.ronaldburker.workers.dev/mp4/eldSTC8xSExRQUlIbDdYRG0rSkJsZz09Omc1bk5KRE5EWWcwc1l1dEF5TmpYcWJGdmEvRFNkNHVyZWdJQWpwNmJXSHdhRkZOTUJhMXdYbG5WMHN2TU52eDR3cm1LOGFkdHFrY2lGYU9VWDNkZm1aNnI2Z3FZK203bnIxZ0RFYUN0dEdNZ3ZCYkwwenNPUmdHOUFWbXpkSWVRbnQyOHByaVFUckNZeEpYbnowWFhHRzVrTmhOS25ERkNyYWxBSDVCanVkS09YMlYwaHVENG5vSHlFT0lCenRwaVdxRkRVSit5eEI3eEVtOGhFcDRra3c4czF5aEtOZ2tOczFXd1gzRkM2LzU1VnZNYlc5QlBpRWNQdWh6UFlZYjUzWmYyR3ROaGxMTFVHQ3ZLNTRxV3QxaGJ0YTVlQ1NLR2NuQ0MyWUF0V1BRPQ==", image: "https://image.tmdb.org/t/p/w500/hju9XncHxUxUS1GAJ4YqpdFCa5t.jpg", category: "other", year: 2026 },
+            { title: "Ankush", video: "https://www.youtube.com/embed/tWO_XMvx1oE", image: "https://image.tmdb.org/t/p/w500/pXukJVT2MNsRH82hYDcIZng3XzL.jpg", category: "other", year: 1986 },
+            { title: "Lakshya", video: "https://sojg.mindspireeducation.cyou:443/v4/61/8e9aj/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/ctB8RWoK2LHn5skqN4eUWVSvpyM.jpg", category: "other", year: 2004 },
+            { title: "Kesari", video: "https://slob.halcyonfinancialgroup.online:443/v4/hz/qbibq/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/ctjT1pMNAGD9ou0kuhz806tf7kX.jpg", category: "other", year: 2019 },
+            { title: "Sam Bahadur", video: "https://spuc.harmonynest.space:443/v4/ty/pdsuj/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/nFYf3g3CObjx9ri3PMWkK1lWFhr.jpg", category: "other", year: 2023 },
+            { title: "Sky Force", video: "https://s9dz.neoventis.sbs:443/v4/hz/ontqni/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/pmtev9YTlIRDo25G7lN8dzyoszn.jpg", category: "other", year: 2025 },
+            { title: "Shershaah", video: "https://slob.nevalonmedia.cyou:443/v4/sc/xb1l1/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/zGvFnwoXJKrYnKhoVPytqkqCJ8V.jpg", category: "other", year: 2021 },
+            { title: "Major", video: "https://sskt.harmonixwellnessgroup.store/v4/ek/ocplh/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/sJOfJuyQVZPwNQ8g21Qv0lojQhC.jpg", category: "other", year: 2022 },
+            { title: "RRR", video: "https://s8v3.mindcrest.store:443/v4/ty/3fb8f/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/u0XUBNQWlOvrh0Gd97ARGpIkL0.jpg", category: "other", year: 2022 },
+            { title: "Romeo Akbar Walter", video: "https://silu.satoriwell.online/v4/qu/dzbnz/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/bFMVatMQVqB3lZGXFpK38tPAetq.jpg", category: "other", year: 2019 },
+            { title: "Parmanu: The Story of Pokhran", video: "https://s9dz.bluehavenhospitality.sbs/v4/xq/r1emm/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/58X8iBxgT5n4aVBLkDFSnOrIHlD.jpg", category: "other", year: 2018 },
+            { title: "The Ghazi Attack", video: "https://spuc.clarionforge.online:443/v4/sc/9abtf/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/i7lITQa1v7dZZgLIdE8vZRnPhOC.jpg", category: "other", year: 2017 },
+            { title: "Mission Mangal", video: "https://s5zt.ironbrookarchitecture.shop:443/v4/lf/6nuek/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/yUR7yDFNXQSoA51G0PPjIXOG2C9.jpg", category: "other", year: 2019 },
+            { title: "Special 26", video: "https://spuc.viatrix.space:443/v4/lf/xoez8/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/cOo6lOiZXO0zldPKsih9asKPWDo.jpg", category: "other", year: 2013 },
+            { title: "OMG: Oh My God!", video: "https://sr81.mountainstreamlab.space:443/v4/hz/jyrmi/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/iTPzC3H2iG49xFIcMs01UfZeBXv.jpg", category: "other", year: 2012 },
+            { title: "OMG 2", video: "https://spuc.mindspireleadership.space/v4/k5/6o1c1/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/kApiO3oL6t100aCtkcwEhk2kqgK.jpg", category: "other", year: 2023 },
+            { title: "Chillar Party", video: "https://skra.bellavueartfoundation.store:443/v4/hz/hgofe/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/8YiD2WbKltx1XzpWZ83sNIUttGX.jpg", category: "other", year: 2011 },
+            { title: "PINK", video: "https://sxic.vellariofashion.cyou:443/v4/xq/5payp/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w185/6xNhnyKm2M5FEOY7xv5iKiQ5P3.jpg", category: "other", year: 2016 },
+            { title: "Aakrosh", video: "https://mega.nz/embed/1ZUHgCZa#A1r0aJCSp90rhOXO1i2-0qws9H8SfZCaUsQICo8o_zo", image: "https://image.tmdb.org/t/p/w500/bsWDigqdZxPBGjV6naJuITZNJ9U.jpg", category: "other", year: 2010 },
+            { title: "Hera Pheri", video: "https://www.youtube.com/embed/TIQ5hrfermg", image: "https://image.tmdb.org/t/p/w500/iQIbClo27cBFROLuccQLLbMsJuX.jpg", category: "other", year: 2000 },
+            { title: "Phir Hera Pheri", video: "https://www.youtube.com/embed/TmxYlA26Jr4", image: "https://image.tmdb.org/t/p/w500/c1Mvyd983ZyrU5Vf2aKEe6WncSq.jpg", category: "other", year: 2006 },
+            { title: "Hulchul", video: "https://www.youtube.com/embed/LogvhmhMDeQ", image: "https://image.tmdb.org/t/p/w500/ve6YjkjNAbY2r2djFxrw6v9IXfy.jpg", category: "other", year: 2004 },
+            { title: "Hungama", video: "https://www.youtube.com/embed/HVyXEbOWrp4", image: "https://image.tmdb.org/t/p/w500/oLmPYAufnpoqlkfzyeWWcsVcc0F.jpg", category: "other", year: 2003 },
+            { title: "Hungama 2", video: "https://mega.nz/embed/8FlTiCKY#2bAkUd5_krycVjbct8FLXdyzS25XnedW3TfHzf__EJI", image: "https://image.tmdb.org/t/p/w500/1cB0Zml2lfsbeGrLo1YoFpu5HdH.jpg", category: "other", year: 2021 },
+            { title: "Dhamaal", video: "https://www.youtube.com/embed/LKNHVDPKy7g", image: "https://image.tmdb.org/t/p/w500/pQgU9W1OyHDxBOZcJpVLc2E8gQa.jpg", category: "other", year: 2007 },
+            { title: "Double Dhamaal", video: "https://www.youtube.com/embed/yn9uzJFc_EI", image: "https://image.tmdb.org/t/p/w500/ysGYrjeAdIXZULLVdGzwliqGHyU.jpg", category: "other", year: 2011 },
+            { title: "Inspector Zende", video: "https://drive.google.com/file/d/1RNAdKSfUw4P1Rob1Q568qODlz0P8xm62/preview", image: "https://image.tmdb.org/t/p/w500/uY6xBuKMDMFNQHhGdlEU1NP4gYO.jpg", category: "other", year: 2025 },
+            { title: "Khatta Meetha", video: "https://www.youtube.com/embed/My5L3qLhewg", image: "https://image.tmdb.org/t/p/w500/rIM83O7WUcZIlg9pd6SgXgB0w2v.jpg", category: "other", year: 2010 },
+            { title: "Garam Masala", video: "https://www.youtube.com/embed/gxBERAhEU7w", image: "https://image.tmdb.org/t/p/w500/puk8ca4bL9HG1R8BwORif8bHGqY.jpg", category: "other", year: 2005 },
+            { title: "Golmaal-Fun Unlimited", video: "https://www.youtube.com/embed/SodVhwB6Sz8", image: "https://image.tmdb.org/t/p/w500/3ubefqLk26Gy0lXCfGIu8hQrBak.jpg", category: "other", year: 2006 },
+            { title: "Golmaal Returns", video: "https://www.youtube.com/embed/TMQiRFopX_U", image: "https://image.tmdb.org/t/p/w500/2X6ZSlnBpgsOpH0ELDraWTD4QO7.jpg", category: "other", year: 2008 },
+            { title: "Golmaal 3", video: "https://www.youtube.com/embed/7BPczrVf7xk", image: "https://image.tmdb.org/t/p/w500/S2BE87q5g8HWDVfoEU8QN9UXfn.jpg", category: "other", year: 2010 },
+            { title: "Golmaal Again", video: "https://www.youtube.com/embed/J7vzDh2A9nk", image: "https://image.tmdb.org/t/p/w500/kGx26PL1v658T8XbOk5MfmNpHU3.jpg", category: "other", year: 2017 },
+            { title: "Vaastav", video: "https://www.youtube.com/embed/cINYT2w7SEo", image: "https://image.tmdb.org/t/p/w500/fsB57eZ0EJ9nXLxgfjQG9iYiswH.jpg", category: "other", year: 1999 },
+            { title: "Hathyar", video: "https://www.youtube.com/embed/AJm5z_b8JKE", image: "https://image.tmdb.org/t/p/w500/fih088o07oF0w1jbBsC1mzmLAvS.jpg", category: "other", year: 2002 },
+            { title: "IB 71", video: "https://s3ae.novavisioninvestment.online/v4/ek/d3vhq/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/n3tDKjw14Ig3suHOx8GSBtCxEX7.jpg", category: "other", year: 2023 },
+            { title: "Mumbai Saga", video: "https://sxix.nuvistar.online/v4/ho/o3fu3/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/4xTtLkGEmUD5Oqjsv3lrkeLr2NW.jpg", category: "other", year: 2021 },
+            { title: "Hindi Medium", video: "https://www.youtube.com/embed/K4jAfceOXD4", image: "https://image.tmdb.org/t/p/w500/2v0nQd3kYBV0iPNCVHiaLWGb1hg.jpg", category: "other", year: 2017 },
+            { title: "Angrezi Medium", video: "https://slob.vinturastudios.shop:443/v4/36/hjyi9/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/hT41Fi3NAqkPpNkWt7imaOtxGDP.jpg", category: "other", year: 2020 },
+            { title: "Stree", video: "https://www.youtube.com/embed/CAEkq5_Vsfg", image: "https://resizing.flixster.com/DPMvNGQZx6BbVuPJ2jaP1KesLTE=/fit-in/352x330/v2/https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p15884362_v_v8_ab.jpg", category: "other", year: 2018 },
+            { title: "Stree 2: Sarkate Ka Aatank", video: "https://sxic.horizonmosaicacademy.online/v4/36/tavvrc/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/nfnhwfUEFuSOxxf4jDdBlY6Lccw.jpg", category: "other", year: 2024 },
+            { title: "Param Sundari", video: "https://drive.google.com/file/d/1Jy36GyhzHAfiHDsP80UVhua0H3hnQgrF/preview", image: "https://image.tmdb.org/t/p/w500/imwqtXgDlHjvt2WZpfqEugUbHmV.jpg", category: "other", year: 2025 },
+            { title: "Sunny Sanskari Ki Tulsi Kumari", video: "https://drive.google.com/file/d/1ObqMv_BX_IiYD34qHnD3gw_B-GsZREl0/preview", image: "https://image.tmdb.org/t/p/w500/kzSVbSHEaIavcHZr1B9QEHq6a7.jpg", category: "other", year: 2025 },
+            { title: "Tere Ishq Mein", video: "https://drive.google.com/file/d/1yRhdSA5nE-P5Saq4DSSaapYsu_MurdJm/preview", image: "https://image.tmdb.org/t/p/w500/7FsHlW9z7gDhDE4EXAE2WcXUVQj.jpg", category: "other", year: 2025 },
+            { title: "De De Pyaar De", video: "https://www.youtube.com/embed/O15pvbaEsLY", image: "https://image.tmdb.org/t/p/w500/lKxbegRPahPDeOYeaDHhsNJDZU8.jpg", category: "other", year: 2019 },
+            { title: "De De Pyaar De 2", video: "https://drive.google.com/file/d/1r0upHmFg4TB5dRb3eAavhdmNTkg2nila/preview", image: "https://image.tmdb.org/t/p/w500/g3J7r2t3L9HEgyWMX0Fki04Swtu.jpg", category: "other", year: 2025 },
+            { title: "The Girlfriend", video: "https://drive.google.com/file/d/1XyPzMAIHPEjVTpovrqmOYDBSn-WG3Swv/preview", image: "https://image.tmdb.org/t/p/w500/8cYve5muYPeWKvSEfFdkmWDyyDa.jpg", category: "other", year: 2025 },
+            { title: "Jab Tak Hai Jaan", video: "https://drive.google.com/file/d/16jLKvKbg0FRlOPZLnYT1PXnxo3W63hji/preview", image: "https://catimages.org/images/2025/05/06/Jab.Tak.Hai.Jaan.2012.jpg", category: "other", year: 2012 },
+            { title: "Enemy", video: "https://drive.google.com/file/d/1JnNHfUnx4Kz05iVJa0betSyp39UWXPTb/preview", image: "https://image.tmdb.org/t/p/w400/qUeswZkFEU28om2DMfNrT8CUvxn.jpg", category: "other", year: 2021 },
+            { title: "Dude", video: "https://drive.google.com/file/d/1lrOc-OU3pZE9hlu-o_Alv0qT2ANw7gf-/preview", image: "https://image.tmdb.org/t/p/w500/6UVxW4ktk5050j1VPb7mOKhT6Es.jpg", category: "other", year: 2025 },
+            { title: "Lokah Chapter-1", video: "https://drive.google.com/file/d/1UqE0Vxlp2HVyMAF5DsluR2l5u-pmdcVG/preview", image: "https://image.tmdb.org/t/p/w500/mVLgxigdqMEyluylocqYTZW8uP.jpg", category: "other", year: 2025 },
+            { title: "Idli Kadai", video: "https://drive.google.com/file/d/11XB4AOliukMYCobDFdvZSovSb9n55dkn/preview", image: "https://catimages.org/images/2025/10/29/Idli-Kadai-2025-HDHub4u.Ms.jpg", category: "other", year: 2025 },
+            { title: "Thamma", video: "https://drive.google.com/file/d/1IhRZjzDxnEb6czK10ZXKPpnzaUFXvzdJ/preview", image: "https://image.tmdb.org/t/p/w500/z20u8Yt9oGmpSm2NUnlPlo8lJVO.jpg", category: "other", year: 2025 },
+            { title: "Ek Deewane Ki Deewaniyat", video: "https://drive.google.com/file/d/1AZC_6Z22TinZzJqo-SFtQkOF6UCHZRy4/preview", image: "https://image.tmdb.org/t/p/w500/1AfKrRPRPT0TtCTiK9uyBCgFjZS.jpg", category: "other", year: 2025 },
+            { title: "Mirai", video: "https://drive.google.com/file/d/19snvn_i_5kPupGjeRs9Y9FvoWgHjFcaQ/preview", image: "https://image.tmdb.org/t/p/w500/28mjgY8UHW96JtOmpgc9lZt5ZFq.jpg", category: "other", year: 2025 },
+            { title: "Baaghi 4", video: "https://drive.google.com/file/d/14mtrsuHR-4NhfqJo1SWryGoBplduDS-N/preview", image: "https://image.tmdb.org/t/p/w500/u2YEFW5o2Y7RAw2K4hSA4TEXF3Q.jpg", category: "other", year: 2025 },
+            { title: "Dragon", video: "https://drive.google.com/file/d/1jPUNpfWT8YVReKFzkIdA6XJqLyAxUO0l/preview", image: "https://image.tmdb.org/t/p/w500/3BR3YTR04dO9ztCx8LZx2C2eu4G.jpg", category: "other", year: 2025 },
+            { title: "The Family Star", video: "https://drive.google.com/file/d/10Au4sramEYx6inFSYor7-N3tfYb-GABq/preview", image: "https://image.tmdb.org/t/p/w500/byS7hZTqIC4CvSyo0ePnX4HmH7f.jpg", category: "other", year: 2024 },
+            { title: "Tu Jhoothi Main Makkaar", video: "https://drive.google.com/file/d/1yBELPdgKENYUFspSMNyU-iIy9bF58VQ-/preview", image: "https://catimages.org/images/2023/05/03/Tu-Jhoothi-Main-Makkaar-2023-Hindi-Dubbed-HDRip-Full-Movie-HDHub4u.jpg", category: "other", year: 2023 },
+            { title: "Amaran", video: "https://drive.google.com/file/d/18d2j5cZ--ZhI8oUUuHKLXaJmxyF-mGOD/preview", image: "https://catimages.org/images/2024/12/05/Amaran-2024-HDHub4u.Tv.jpg", category: "other", year: 2024 },
+            { title: "K.G.F Chapter-1", video: "https://sbi6.greenpulseventures.store:443/v4/9a/ua6gj/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/ltHlJwvxKv7d0ooCiKSAvfwV9tX.jpg", category: "other", year: 2018 },
+            { title: "K.G.F Chapter-2", video: "https://drive.google.com/file/d/1dFazEE2LpGns1b2h6PgWyoDEMgYhMOOY/preview", image: "https://myimg.click/images/2022/05/16/KGF-CHAPTER-2-2022-Hindi-ORG-WEBRip-Full-Movie.jpg", category: "other", year: 2022 },
+            { title: "Pushpa-The Rise", video: "https://s6sy.wanderpeakevents.store:443/v4/ho/nveu3/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/h6Pd89ngvl9quPVsx3KoJlQsvk9.jpg", category: "other", year: 2021 },
+            { title: "Pushpa 2-The Rule", video: "https://sdqm.skylinehospitality.store/v4/db/xzelz/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/759mIIerY4Njb8uPoj7AIXGSNh3.jpg", category: "other", year: 2024 },
+            { title: "Bāhubali: The Beginning", video: "https://sskt.mindspireeducation.cyou:443/v4/sc/9tndm/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/9BAjt8nSSms62uOVYn1t3C3dVto.jpg", category: "other", year: 2015 },
+            { title: "Bāhubali 2: The Conclusion", video: "https://sipt.stellarforgeinnovation.online:443/v4/np/5snng/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/21sC2assImQIYCEDA84Qh9d1RsK.jpg", category: "other", year: 2017 },
+            { title: "Bāhubali: The Epic", video: "https://s3u.stellarcrestdigital.sbs:443/v4/mf/liwsy3/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/4sLSorDKKDN944kWngxgQlpdDeg.jpg", category: "other", year: 2025 },
+            { title: "Kanguva", video: "https://drive.google.com/file/d/1D_pBIy5uOqjKS1BOy6Lmx9dHDPGX8pb-/preview", image: "https://image.tmdb.org/t/p/w400/lycbTFBXqFN1kMdPEsnAFutKEEy.jpg", category: "other", year: 2024 },
+            { title: "Salaar: Cease Fire-Part 1", video: "https://drive.google.com/file/d/1bmNwBrOgM9vuMZMe76wYVMMDFWdvHKWr/preview", image: "https://image.tmdb.org/t/p/w400/zAug8d6kpBMPyxZvY66q2x8csd.jpg", category: "other", year: 2023 },
+            { title: "Robinhood", video: "https://drive.google.com/file/d/1onf-0jT04noQg0ZRgDo0Q6jYhHwENyu1/preview", image: "https://image.tmdb.org/t/p/w500/ucWYixRZBvqoXOM83LdmSSn45na.jpg", category: "other", year: 2025 },
+            { title: "Hi Nanna", video: "https://drive.google.com/file/d/1VNY2n8s1-O-GhG5GHsMGDqwJlQh--_Q7/preview", image: "https://image.tmdb.org/t/p/w400/hhMLtq9m1aK0dpY9Wcq26XeDH2z.jpg", category: "other", year: 2023 },
+            { title: "Dhadak-2", video: "https://drive.google.com/file/d/1ootTXZHGzbbommrafO2uS7o2Tph2Uyt7/preview", image: "https://image.tmdb.org/t/p/w400/s3o23GbRXvHPPRm50kqQjjjCoKP.jpg", category: "other", year: 2025 },
+            { title: "Son of Sardar 2", video: "https://drive.google.com/file/d/1ji4BEUgmpuHIVxjQmClYyedZzH_cS0mK/preview", image: "https://image.tmdb.org/t/p/w400/k47tmhqiUsmD6UoyoimHVQAjHx9.jpg", category: "other", year: 2025 },
+            { title: "Saiyaara", video: "https://drive.google.com/file/d/1IJEbHGcQti_ukEbsAvcVzMcDOEh4DBpq/preview", image: "https://image.tmdb.org/t/p/w500/z98O8Eqk3JDlCfUhXok1kwz24xl.jpg", category: "other", year: 2025 },
+            { title: "Maalik", video: "https://drive.google.com/file/d/1EjazbiFFkr94SMUxVDMmeKy5Ne95ZCL3/preview", image: "https://image.tmdb.org/t/p/w500/rnPeVGkXyGtyLfcLlk5TzMms6ue.jpg", category: "other", year: 2025 },
+            { title: "Kingdom", video: "https://drive.google.com/file/d/1i1jUxwJActohVaHKtfz1vb_mkUnV0rIf/preview", image: "https://image.tmdb.org/t/p/w500/6x0wmp2LlLqhEbd8XKjJpTHdHsT.jpg", category: "other", year: 2025 },
+            { title: "Maine Pyar Kiya", video: "https://drive.google.com/file/d/1I9efc__R2KkW9M4gX7c7ixNBaxzvZr3w/preview", image: "https://image.tmdb.org/t/p/w500/sLZDgW62XHIeYZTX5YFpK76p6Aq.jpg", category: "other", year: 2025 },
+            { title: "WAR", video: "https://s6sy.luminarygroupdigital.online/v4/db/6nqvv/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/yUtaHkL2SDIAZhRApZAyQrAXygn.jpg", category: "other", year: 2019 },
+            { title: "WAR 2", video: "https://s8v3.greenpointeducation.site:443/v4/tab/puzeix/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/2Yc8Kl2ldPpDzLrG2M5Ddv62FXB.jpg", category: "other", year: 2025 },
+            { title: "Grand Masti", video: "https://drrh37sqosrl.harborlightartisanworks.cyou:443/lzbu5jjozkad/hls3/01/02330/glq769hxs6qc_h/index-v1-a1.txt", image: "https://image.tmdb.org/t/p/w342/9DtPtMWZqotqvBlMwHlTxXc6xPz.jpg", category: "other", year: 2013 },
+            { title: "Great Grand Masti", video: "https://skra.ethervoxventures.cyou:443/v4/ek/ks3wt/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w342/vbbH4PoR6SPhVbospP1nFHzHpiz.jpg", category: "other", year: 2016 },
+            { title: "Ghoomer", video: "https://mega.nz/embed/sIk3iDbB#2UnF1p8Geev-LnqnnaTU_4Kiwt-QAAhdAj49QJq5mk8", image: "https://image.tmdb.org/t/p/w500/6npQ0MxlmCqPPF8H5xK4yGt7ZLL.jpg", category: "other", year: 2023 },
+            { title: "Diplomat", video: "https://mega.nz/embed/7Q1VnYjD#RKma9iVjJPQ40ji9GwI-9ybdY3oHvFK_OZlb4ZRMFEc", image: "https://image.tmdb.org/t/p/w500/uwl9Y4px8TTIQK4N19k6gnW1RnX.jpg", category: "other", year: 2025 },
+            { title: "Mardaani", video: "https://sdqm.valenium.shop/v4/lf/rzpd9/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/mI77x6LZ9IHpHjTjvgNeC4Uxfsa.jpg", category: "other", year: 2014 },
+            { title: "Mardaani 2 ", video: "https://spuc.luminairewellbeing.sbs/v4/xq/oaizm/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/9Fk6SzvqFuPMGCfnkUSDANtOxVD.jpg", category: "other", year: 2019 },
+            { title: "Singham", video: "https://se9d.moonstreamspace.space/v4/qu/uwfgv/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/pggLRaurdWwjqX2vkhKIVQSBjXV.jpg", category: "other", year: 2011 },
+            { title: "Singham Returns ", video: "https://sqtd.skylineforge.space:443/v4/np/xzy5i/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/k8CDjZLYG8bCIuXWAg4gukxf0BE.jpg", category: "other", year: 2014 },
+            { title: "Singham Again ", video: "https://sqtd.travianastudios.space/v4/us/btny6/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/2JbNkHg8m7LaBy61LyrnnlenaxY.jpg", category: "other", year: 2024 },
+            { title: "Simmba ", video: "https://s8v3.silverlark.sbs:443/v4/lf/rukk3/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/ulQO4XJ1xlWdl4vX8Lr3SbWRfZw.jpg", category: "other", year: 2018 },
+            { title: "Badlapur ", video: "https://spok.maravellastudio.shop:443/v4/hz/emn5u/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/9bbJBjCcyjYyMG9kW38X55tgiYu.jpg", category: "other", year: 2015 },
+            { title: "Good Newwz", video: "https://s6sy.terraforgeinnovations.space/v4/qu/xokxy/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/1YWp8MdXZAZvXgnWyv2RgMaG3Ps.jpg", category: "other", year: 2019 },
+            { title: "Rustom ", video: "https://s6sy.meridianoutdoorlife.sbs/v4/6s/m9q5t/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/xwf74VcrHu1etzOsRVx7nckPPLR.jpg", category: "other", year: 2016 },
+            { title: "Baby ", video: "https://scvo.oceantrailmedia.sbs/v4/ic/pcc1i/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/5yezGgo37qmd6kDknZKFzbhT19b.jpg", category: "other", year: 2015 },
+            { title: "Dangal ", video: "https://sojg.harmonynetworks.space/v4/vz/qzgdb/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/cJRPOLEexI7qp2DKtFfCh7YaaUG.jpg", category: "other", year: 2016 },
+            { title: "Lagaan ", video: "https://slob.silverforgeindustries.store:443/v4/rw/peicf/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/yNX9lFRAFeNLNRIXdqZK9gYrYKa.jpg", category: "other", year: 2001 },
+            { title: "Rang De Basanti ", video: "https://stzm.vinturastudios.shop:443/v4/us/xqrxb/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/f1bF8CHzEu621bPSIg6XiUNAabh.jpg", category: "other", year: 2006 },
+            { title: "Taare Zameen Par ", video: "https://s3ae.lunetrix.store:443/v4/ic/qiuic/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/puHRt6Raovm5ujGCdwLWvRv4NHU.jpg", category: "other", year: 2007 },
+            { title: "Sitaare Zameen Par ", video: "https://s9dz.greenleafhospitality.space:443/v4/61/cv5dhg/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/adYjCJGSNiL7CIaDW3g0Bcg7r2Z.jpg", category: "other", year: 2025 },
+            { title: "Bell Bottom", video: "https://54pkdcyxbsxbermn.p8kbv3o9bu66p9rm.shop/xcjcmoh7mtij/hls3/01/02507/sdwwr68qlfy5_n/master.txt", image: "https://image.tmdb.org/t/p/w500/aSY5LBwNdpMReaZjGBbcB1kvrHU.jpg", category: "other", year: 2021 },
+            { title: "Risk", video: "https://mega.nz/embed/vhhDXTrZ#XD1pYF489mwbsSa4OhMrjoIe2udfxgjmk6DV6OehYAY", image: "https://image.tmdb.org/t/p/w500/t7XR3iEokWFbpgTf4CR7fc66HXC.jpg", category: "other", year: 2007 },
+         ];
+
+
+    /******************************
+     * DOM refs for modal controls
+     ******************************/
+    const playbackModal = document.getElementById('playbackModal');
+    const playerWrapper = document.getElementById('playerWrapper');
+    const modalVideoId = 'modalVideo';
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDesc = document.getElementById('modalDesc');
+
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const back10Btn = document.getElementById('back10Btn');
+    const forward10Btn = document.getElementById('forward10Btn');
+
+    let currentHls = null;
+    let currentFiltered = [];
+    let currentIndex = null;
+
+    /******************************
+     * Type detection helpers
+     ******************************/
+    function isMP4(url) { return /\.mp4($|\?)/i.test((url||'')); }
+    function isHls(url) {
+      if (!url) return false;
+      return url.includes('.m3u8') || url.includes('index-') || /index.*\.txt/i.test(url) || url.includes('manifest') || url.includes('master');
+    }
+    function isYouTube(url) {
+      if (!url) return false;
+      return url.includes('youtube.com') || url.includes('youtu.be') || url.includes('youtube-nocookie.com') || url.includes('/embed/');
+    }
+
+    /******************************
+     * Reset player container
+     ******************************/
+    function resetPlayerContainer() {
+      if (currentHls) {
+        try { currentHls.destroy(); } catch(e) {}
+        currentHls = null;
+      }
+      playerWrapper.innerHTML = `<video id="${modalVideoId}" controls playsinline style="width:100%;height:100%;background:#000"></video>`;
+    }
+
+    function showModal() {
+      playbackModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    function hideModal() {
+      playbackModal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    function showError(msg) {
+      console.warn(msg);
+    }
+
+    /******************************
+     * Core: open player (Illumination logic)
+     ******************************/
+    function openPlayer(list, index) {
+      if (!Array.isArray(list) || list.length === 0 || index == null || index < 0 || index >= list.length) {
+        showError('Invalid playback request');
+        return;
+      }
+      currentFiltered = list;
+      currentIndex = index;
+      const movie = list[index];
+      if (!movie) { showError('Movie missing'); return; }
+
+      // metadata
+      modalTitle.textContent = movie.title || '';
+      modalDesc.textContent = movie.description || (movie.title || '');
+
+      // reset & show
+      resetPlayerContainer();
+      showModal();
+
+      // pick src
+      let src = '';
+      if (typeof movie.video === 'object' && movie.video !== null) {
+        src = movie.video.high || movie.video.medium || movie.video.low || Object.values(movie.video)[0];
+      } else {
+        src = movie.video;
+      }
+      if (!src) {
+        showError('No video source');
+        setTimeout(()=> window.location.href = `player.html?title=${encodeURIComponent(movie.title||'')}&video=`, 500);
+        return;
+      }
+
+      const lc = (src || '').toLowerCase();
+
+      // iframe-hosted common hosts
+      if (lc.includes('streamtape.com') || lc.includes('dood') || lc.includes('vidcdn') || lc.includes('ok.ru') || lc.includes('mega.nz') || lc.includes('openload') || lc.includes('drive.google.com')) {
+        playerWrapper.innerHTML = `<iframe src="${src}" width="100%" height="100%" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+        playPauseBtn.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause';
+        return;
+      }
+
+      // youtube
+      if (isYouTube(src)) {
+        let embed = src;
+        try {
+          if (src.includes('watch') && src.includes('v=')) {
+            const v = new URLSearchParams(src.split('?')[1]).get('v');
+            if (v) embed = `https://www.youtube.com/embed/${v}`;
+          } else if (src.includes('youtu.be/')) {
+            const p = src.split('youtu.be/')[1].split(/[?&]/)[0];
+            if (p) embed = `https://www.youtube.com/embed/${p}`;
+          }
+        } catch (e) {}
+        playerWrapper.innerHTML = `<iframe src="${embed}?autoplay=1&modestbranding=1&rel=0" width="100%" height="100%" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+        playPauseBtn.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause';
+        return;
+      }
+
+      // HLS
+      if (isHls(src)) {
+        const v = document.getElementById(modalVideoId);
+        if (!v) { showError('Video element missing'); return; }
+        if (window.Hls && Hls.isSupported()) {
+          currentHls = new Hls();
+          try {
+            currentHls.loadSource(src);
+            currentHls.attachMedia(v);
+          } catch (e) { console.warn('HLS attach error', e); }
+          currentHls.on(Hls.Events.MANIFEST_PARSED, function() {
+            v.play().catch(()=>{});
+            playPauseBtn.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause';
+          });
+          currentHls.on(Hls.Events.ERROR, function(event, data) {
+            console.warn('HLS error', data);
+            if (data && data.fatal) {
+              try { currentHls.destroy(); } catch(e){}
+              currentHls = null;
+              showError('HLS fatal error — redirecting to player.html');
+              setTimeout(()=> window.location.href = `player.html?title=${encodeURIComponent(movie.title||'')}&video=${encodeURIComponent(src||'')}`, 700);
+            }
+          });
+        } else if (v.canPlayType && v.canPlayType('application/vnd.apple.mpegurl')) {
+          v.src = src;
+          v.play().catch(()=>{});
+          playPauseBtn.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause';
+        } else {
+          showError('HLS not supported — redirecting to player.html');
+          setTimeout(()=> window.location.href = `player.html?title=${encodeURIComponent(movie.title||'')}&video=${encodeURIComponent(src||'')}`, 700);
+        }
+        return;
+      }
+
+
+      // FORCE Workers MP4 streams to use HTML5 video
+if (src.includes('workers.dev/mp4/')) {
+  const v = document.getElementById(modalVideoId);
+  if (!v) { showError('Video element missing'); return; }
+
+  v.src = src;
+  v.load();
+  v.play().catch(()=>{});
+  playPauseBtn.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause';
+  return;
+}
+
+
+      // MP4
+      if (isMP4(src)) {
+        const v = document.getElementById(modalVideoId);
+        if (!v) { window.location.href = `player.html?title=${encodeURIComponent(movie.title||'')}&video=${encodeURIComponent(src||'')}`; return; }
+        v.src = src;
+        v.play().catch(()=>{});
+        playPauseBtn.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause';
+        return;
+      }
+
+      // fallback
+      window.location.href = `player.html?title=${encodeURIComponent(movie.title||'')}&video=${encodeURIComponent(src||'')}`;
+    }
+
+    /******************************
+     * Controls
+     ******************************/
+    function togglePlayPause() {
+      const v = document.getElementById(modalVideoId);
+      if (!v) return;
+      if (v.paused) {
+        v.play().catch(()=>{});
+        playPauseBtn.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause';
+      } else {
+        v.pause();
+        playPauseBtn.innerHTML = '<i class="fas fa-play mr-2"></i>Play';
+      }
+    }
+    function playNext() {
+      if (!currentFiltered || currentFiltered.length === 0) currentFiltered = movies.slice();
+      if (currentIndex == null) return showError('No current video');
+      if (currentIndex < currentFiltered.length - 1) openPlayer(currentFiltered, currentIndex + 1);
+      else showError('No next video');
+    }
+    function playPrev() {
+      if (!currentFiltered || currentFiltered.length === 0) currentFiltered = movies.slice();
+      if (currentIndex == null) return showError('No current video');
+      if (currentIndex > 0) openPlayer(currentFiltered, currentIndex - 1);
+      else showError('No previous video');
+    }
+    function toggleFullscreen() {
+      const el = document.getElementById(modalVideoId) || playerWrapper.querySelector('iframe');
+      if (!el) return;
+      if (!document.fullscreenElement) {
+        (el.requestFullscreen || playerWrapper.requestFullscreen).call(el).catch(()=> showError('Fullscreen failed'));
+      } else {
+        document.exitFullscreen();
+      }
+    }
+    function toggleMute() {
+      const v = document.getElementById(modalVideoId);
+      if (!v) return;
+      v.muted = !v.muted;
+      muteBtn.innerHTML = v.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+    }
+    function seekBackward10() {
+  const v = document.getElementById(modalVideoId);
+  if (!v) return;
+  v.currentTime = Math.max(0, v.currentTime - 10);
+}
+
+function seekForward10() {
+  const v = document.getElementById(modalVideoId);
+  if (!v) return;
+  v.currentTime = Math.min(v.duration || Infinity, v.currentTime + 10);
+}
+
+
+    /******************************
+     * Close modal & cleanup
+     ******************************/
+    function closeModalHandler() {
+      if (currentHls) {
+        try { currentHls.destroy(); } catch(e) {}
+        currentHls = null;
+      }
+      const v = document.getElementById(modalVideoId);
+      if (v) {
+        try { v.pause(); } catch(e){}
+        try { v.removeAttribute('src'); v.load(); } catch(e){}
+      }
+      resetPlayerContainer();
+      hideModal();
+      currentIndex = null;
+      currentFiltered = [];
+      playPauseBtn.innerHTML = '<i class="fas fa-play mr-2"></i>Play';
+    }
+
+    /******************************
+     * Events wiring
+     ******************************/
+    playPauseBtn.addEventListener('click', togglePlayPause);
+    nextBtn.addEventListener('click', playNext);
+    prevBtn.addEventListener('click', playPrev);
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+    muteBtn.addEventListener('click', toggleMute);
+    document.getElementById('closeBtn').addEventListener('click', closeModalHandler);
+    document.getElementById('topCloseBtn').addEventListener('click', closeModalHandler);
+    if (back10Btn) back10Btn.addEventListener('click', seekBackward10);
+    if (forward10Btn) forward10Btn.addEventListener('click', seekForward10); 
+
+    // close by clicking outside
+    playbackModal.addEventListener('click', function(e){
+      if (e.target === playbackModal) closeModalHandler();
+    });
+
+    // Escape & keyboard
+    document.addEventListener('keydown', (e) => {
+      if (!playbackModal.classList.contains('active')) return;
+      switch (e.key.toLowerCase()) {
+        case 'escape': closeModalHandler(); break;
+        case ' ': e.preventDefault(); togglePlayPause(); break;
+        case 'arrowright': { const v = document.getElementById(modalVideoId); if (v) v.currentTime = Math.max(0, v.currentTime + 10); break; }
+        case 'arrowleft': { const v = document.getElementById(modalVideoId); if (v) v.currentTime = Math.max(0, v.currentTime - 10); break; }
+        case 'f': toggleFullscreen(); break;
+        case 'm': toggleMute(); break;
+        case 'n': playNext(); break;
+        case 'p': playPrev(); break;
+      }
+    });
+
+    /******************************
+     * Render movies and wire to openPlayer
+     ******************************/
+    const container = document.getElementById('movies');
+
+    function renderMovies(moviesToRender) {
+      container.innerHTML = '';
+      moviesToRender.forEach((movie, index) => {
+        const delayClass = `delay-${(index % 5) * 100}`;
+
+        const div = document.createElement('div');
+        div.className = `movie-card animate-fade-in ${delayClass} rounded-xl overflow-hidden bg-gray-800 hover:bg-gray-700 cursor-pointer relative group`;
+        div.innerHTML = `
+          <div class="relative overflow-hidden rounded-t-lg">
+            <img src="${movie.image}" alt="${movie.title}" class="w-full h-full object-cover movie-poster">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+              <button class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded-full transition transform hover:scale-105">
+                <i class="fas fa-play mr-2"></i> Watch Now
+              </button>
+            </div>
+          </div>
+          <div class="p-4">
+            <h3 class="font-semibold text-lg truncate">${movie.title}</h3>
+            <div class="flex justify-between items-center mt-2 text-sm text-gray-400">
+              <span>${movie.year}</span>
+              <span>${movie.duration}</span>
+            </div>
+          </div>
+        `;
+
+        // Open modal and use movies array for prev/next
+        div.addEventListener('click', () => {
+          openPlayer(moviesToRender, index);
+        });
+
+        container.appendChild(div);
+      });
+    }
+
+    // Initial render
+    renderMovies(movies);
+
+    /******************************
+     * Backwards-compatible extras:
+     * Keep original search/category wiring but guard missing elements
+     ******************************/
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeModalHandler);
+
+    // previous code referenced searchBar; guard that
+    const searchBarEl = document.getElementById('searchBar');
+    if (searchBarEl) {
+      searchBarEl.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const filteredMovies = movies.filter(movie => 
+          movie.title.toLowerCase().includes(searchTerm)
+        );
+        renderMovies(filteredMovies);
+      });
+    }
+
+    // Category tabs preservation (guard for existence)
+    document.querySelectorAll('.category-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        // Update active tab
+        document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+
+        const category = this.dataset.category;
+        let filteredMovies;
+
+        if (category === 'all') {
+          filteredMovies = movies;
+        } else {
+          filteredMovies = movies.filter(movie => (movie.categories || []).includes(category));
+        }
+
+        renderMovies(filteredMovies);
+      });
+    });
+
+    /******************************
+     * Create floating stars background (existing)
+     ******************************/
+    function createStars(container, count, sizeRange, durationRange) {
+      for (let i = 0; i < count; i++) {
+        const star = document.createElement('div');
+        star.className = 'absolute rounded-full bg-white';
+
+        // Random position
+        const left = Math.random() * 100;
+        const top = Math.random() * 100;
+
+        // Random size
+        const size = sizeRange[0] + Math.random() * (sizeRange[1] - sizeRange[0]);
+
+        // Random animation duration
+        const duration = durationRange[0] + Math.random() * (durationRange[1] - durationRange[0]);
+
+        star.style.left = `${left}%`;
+        star.style.top = `${top}%`;
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+        star.style.opacity = Math.random() * 0.5 + 0.1;
+        star.style.animation = `float ${duration}s infinite ease-in-out alternate`;
+        star.style.animationDelay = `${Math.random() * 5}s`;
+
+        container.appendChild(star);
+      }
+    }
+
+    const starsContainer = document.querySelector('.stars');
+    const starsContainer2 = document.querySelector('.stars2');
+    if (starsContainer) createStars(starsContainer, 50, [1, 3], [5, 15]);
+    if (starsContainer2) createStars(starsContainer2, 30, [2, 4], [10, 20]);
+
+    // Add floating animation
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes float {
+        0% { transform: translateY(0) translateX(0); }
+        50% { transform: translateY(-20px) translateX(10px); }
+        100% { transform: translateY(0) translateX(0); }
+      }
+    `;
+    document.head.appendChild(style);
+
+</script>
+
+ <!-- ============================= -->
+<!--     ADSTERAA GLOBAL BLOCK     -->
+<!-- ============================= -->
+
+<!-- Banner 300x250 (Best placement: under video or anywhere inside content) -->
+<div id="adsterra-banner-container" style="text-align:center; margin:20px 0;">
+    <script type="text/javascript">
+      atOptions = {
+        'key' : '267d846b24a4cdd5fd7ab140783cec90',
+        'format' : 'iframe',
+        'height' : 250,
+        'width' : 300,
+        'params' : {}
+      };
+    </script>
+    <script type="text/javascript" src="//bowlingprosperhalfbrother.com/267d846b24a4cdd5fd7ab140783cec90/invoke.js"></script>
+</div>
+
+
+<!-- Social Bar (Floating bottom widget - high earnings, non-intrusive) -->
+<script type="text/javascript" src="//bowlingprosperhalfbrother.com/42/5b/58/425b58e61b66997ed4519d91d1f2dcf4.js"></script>
+
+
+<!-- PopUnder (fires once per user interaction) - keep LAST -->
+<script type="text/javascript" src="//bowlingprosperhalfbrother.com/2d/95/e8/2d95e8d5c6532307745afa9b1be1162b.js"></script>
+
+<!-- ============================= -->
+<!--     END ADSTERRA BLOCK        -->
+<!-- ============================= -->
+    
+</body>
+</html>
