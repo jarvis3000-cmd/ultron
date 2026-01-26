@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Sony Pictures Animation Universe</title>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<!-- hls.js for HLS playback -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.1/dist/hls.min.js"></script>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+  :root {
+    --sony-blue: #0066cc;
+    --sony-yellow: #ffcc00;
+    --sony-red: #cc0000;
+    --sony-green: #00cc66;
+  }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #111827 0%, #1e293b 100%);
+    color: white;
+    min-height: 100vh;
+  }
+  /* (kept your existing styles) */
+  .movie-card { transition: all 0.3s ease; transform-style: preserve-3d; perspective: 1000px; cursor:pointer; }
+  .movie-card:hover { transform: translateY(-10px) scale(1.03); box-shadow: 0 25px 50px -12px rgba(255,204,0,0.25); }
+  .movie-poster { transition: all 0.5s ease; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+  .movie-card:hover .movie-poster { transform: rotateY(10deg); }
+  .search-glow { box-shadow: 0 0 15px rgba(255,204,0,0.5); }
+  .sony-logo { text-shadow: 0 0 10px rgba(255,204,0,0.7); }
+  .category-btn { transition: all 0.2s ease; }
+  .category-btn:hover { transform: scale(1.1); }
+  .category-btn.active { background-color: var(--sony-yellow); color: #111827; }
+  .fade-in { animation: fadeIn 0.5s ease-in; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(20px);} to { opacity:1; transform: translateY(0);} }
+  ::-webkit-scrollbar { width:8px; height:8px; } ::-webkit-scrollbar-track { background:#1e293b; } ::-webkit-scrollbar-thumb { background:var(--sony-yellow); border-radius:4px; }
+
+  /* --- Modal / Tukaram-style player styles (from Hawkeye) --- */
+  /* flexible modal overlay */
+  .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.9); z-index:1000; display:flex; justify-content:center; align-items:center; opacity:0; visibility:hidden; transition: all 0.3s ease; }
+  .modal-overlay.active { opacity:1; visibility:visible; }
+  .modal-container { width:90%; max-width:1000px; background:#1e293b; border-radius:12px; overflow:hidden; transform: scale(0.9); transition: transform 0.3s ease; }
+  .modal-overlay.active .modal-container { transform: scale(1); }
+
+  /* Tukaram modal player area */
+  #modal-player { position: relative; padding-bottom:56.25%; height:0; background:black; }
+  #modal-player video, #modal-player iframe { position:absolute; top:0; left:0; width:100%; height:100%; background:black; }
+
+  /* progress bar */
+  .progress-bar { height: 4px; background: rgba(255,255,255,0.12); position: relative; }
+  .progress-bar-fill { position:absolute; top:0; left:0; height:100%; background: var(--sony-yellow); transition: width 0.3s ease; width:0%; }
+
+  /* playback modal content */
+  .watchlist-checkbox { position:relative; display:inline-block; width:20px; height:20px; }
+  .watchlist-checkbox input { opacity:0; width:0; height:0; }
+  .watchlist-checkbox .checkmark { position:absolute; top:0; left:0; height:20px; width:20px; background-color:transparent; border:2px solid #ffcc00; border-radius:4px; transition:all 0.3s; }
+  .watchlist-checkbox input:checked ~ .checkmark { background-color:#ffcc00; }
+  .watchlist-checkbox .checkmark:after { content:""; position:absolute; display:none; }
+  .watchlist-checkbox input:checked ~ .checkmark:after { display:block; left:6px; top:2px; width:5px; height:10px; border:solid black; border-width:0 2px 2px 0; transform:rotate(45deg); }
+
+  @media (max-width: 640px) {
+    .movie-card { width: 100%; }
+    .modal-container { width: 95%; max-width: 100%; }
+    .movie-poster { height: 60vw; }
+    h1 { font-size: 1.8rem; }
+    .search-glow { box-shadow: none; }
+    .container { padding-left: 1rem; padding-right: 1rem; }
+  }
+
+  @media (min-width: 641px) and (max-width: 1024px) {
+    .modal-container { width: 90%; }
+    .movie-poster { height: 35vw; }
+  }
+
+  @media (min-width: 1025px) {
+    .modal-container { width: 80%; max-width: 1200px; }
+  }
+
+  .btn {
+  background: rgba(255,255,255,0.1);
+  padding: 10px 14px;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+.btn:hover {
+  background: var(--sony-yellow);
+  color: black;
+}
+
+/* === SMART FULLSCREEN VIDEO FIX (NO CROPPING, NO GAPS WHEN POSSIBLE) === */
+video:fullscreen,
+video:-webkit-full-screen,
+iframe:fullscreen,
+iframe:-webkit-full-screen {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+
+  object-fit: contain !important;
+  background-color: black;
+}
+
+/* Only cover when video aspect is cinematic */
+@media (min-aspect-ratio: 16/9) {
+  video:fullscreen,
+  video:-webkit-full-screen,
+  iframe:fullscreen,
+  iframe:-webkit-full-screen {
+    object-fit: cover !important;
+  }
+}
+
+</style>
+</head>
+<body class="pb-16">
+  <!-- header (kept) -->
+  <header class="relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-r from-blue-900 via-yellow-600 to-red-900 opacity-20"></div>
+    <div class="container mx-auto px-4 py-4 sm:py-8 relative z-10 text-center">
+      <div class="flex items-center justify-center mb-2 sm:mb-4">
+        <i class="fas fa-film text-2xl sm:text-4xl text-yellow-400 mr-2 sm:mr-3"></i>
+        <h1 class="text-2xl sm:text-4xl font-bold sony-logo"><span class="text-yellow-400">SONY PICTURES</span> <span class="text-white">ANIMATION</span></h1>
+      </div>
+      <p class="text-sm sm:text-lg text-gray-300 max-w-2xl mx-auto">Explore the vibrant world of Sony Pictures Animation's films</p>
+    </div>
+  </header>
+
+  <!-- main -->
+  <main class="container mx-auto px-4">
+    <div class="mb-10">
+      <div class="relative max-w-2xl mx-auto mb-6">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-search text-yellow-400 text-sm sm:text-base"></i></div>
+        <input id="searchBar" class="w-full pl-10 pr-4 py-2 sm:py-3 rounded-full bg-gray-800 border border-gray-700 text-white search-glow text-sm sm:text-base" placeholder="Search Sony Animation movies..." type="text"/>
+        <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+          <button id="clearSearch" class="text-gray-400 hover:text-yellow-400"><i class="fas fa-times"></i></button>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap justify-center gap-3 mb-8">
+
+      </div>
+    </div>
+
+    <div class="flex justify-center items-center py-20" id="loading">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400"></div>
+    </div>
+
+    <div id="movies" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6"></div>
+
+    <div class="hidden text-center py-16" id="noResults">
+      <i class="fas fa-film text-6xl text-gray-600 mb-4"></i>
+      <h3 class="text-2xl font-semibold text-gray-300">No movies found</h3>
+      <p class="text-gray-500 mt-2">Try adjusting your search or filter</p>
+    </div>
+  </main>
+
+ <!-- Footer -->
+<footer class="mt-20 py-6 bg-gray-900 bg-opacity-50">
+<div class="container mx-auto px-4 text-center text-gray-400">
+<div class="flex justify-center space-x-6 mb-4">
+<a class="hover:text-yellow-400 transition-colors" href="#">
+<i class="fab fa-facebook-f"></i>
+</a>
+<a class="hover:text-yellow-400 transition-colors" href="#">
+<i class="fab fa-twitter"></i>
+</a>
+<a class="hover:text-yellow-400 transition-colors" href="https://www.instagram.com/stark_4152">
+<i class="fab fa-instagram"></i>
+</a>
+<a class="hover:text-yellow-400 transition-colors" href="https://www.youtube.com/channel/UCYwTAs1PRVHbq4LnCHEEicw">
+<i class="fab fa-youtube"></i>
+</a>
+</div>
+<p>© Sony Animation Universe. All rights reserved.</p>
+<p class="text-sm mt-2">This is a fan-made project and not affiliated with Sony Animation Studios.</p>
+</div>
+</footer>
+
+  <!-- =======================
+       Playback Modal (Hawkeye/Tukaram-style)
+       ======================= -->
+  <div id="playback-modal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-container">
+      <div class="relative">
+        <button id="close-playback" class="absolute top-4 right-4 z-50 text-white hover:text-yellow-500 text-2xl bg-black/50 rounded-full p-2">
+          <i class="fas fa-times"></i>
+        </button>
+
+        <!-- Flexible player container: video or iframe will be injected here -->
+        <div id="modal-player">
+          <video id="modal-video" class="w-full" controls playsinline>
+            Your browser does not support the video tag.
+          </video>
+        </div>
+
+        <!-- Custom Modal Controls -->
+<div id="custom-controls" class="flex justify-center items-center gap-4 p-4 bg-black/80">
+  <button id="prevBtn" class="btn text-white"><i class="fas fa-step-backward"></i></button>
+  <button id="playPauseBtn" class="btn text-white"><i class="fas fa-play"></i></button>
+  <button id="nextBtn" class="btn text-white"><i class="fas fa-step-forward"></i></button>
+  <button id="muteBtn" class="btn text-white"><i class="fas fa-volume-up"></i></button>
+  <button id="fullscreenBtn" class="btn text-white"><i class="fas fa-expand"></i></button>
+  <button id="closeBtn" class="btn text-white"><i class="fas fa-times"></i></button>
+</div>
+
+
+        <div id="video-progress" class="progress-bar w-full">
+          <div id="progress-bar-fill" class="progress-bar-fill" style="width:0%"></div>
+        </div>
+
+        <div class="p-6">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 id="modal-title" class="text-2xl font-bold mb-1"></h3>
+              <div class="flex items-center text-gray-400 text-sm">
+                <span id="modal-meta">•</span>
+              </div>
+            </div>
+            <label class="watchlist-checkbox" title="Add to watchlist">
+              <input type="checkbox" id="watchlist-checkbox">
+              <span class="checkmark"></span>
+            </label>
+          </div>
+
+          <p id="modal-description" class="text-gray-300 mb-6">Loading...</p>
+
+          <div class="flex space-x-3">
+            <button id="play-btn" class="bg-yellow-600 hover:bg-yellow-700 text-black font-semibold py-2 px-6 rounded-full transition flex items-center">
+              <i class="fas fa-play mr-2"></i> Play
+            </button>
+            <button id="details-btn" class="bg-gray-800 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded-full transition flex items-center">
+              <i class="fas fa-info-circle mr-2"></i> Details
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading spinner overlay used by playback logic -->
+  <div id="loading-spinner" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 hidden">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-yellow-500"></div>
+  </div>
+
+<script>
+  /***** Data: (skipped movie list array as requested) *****/
+  // You asked to skip the movies list array — keep this empty placeholder:
+ const movies = [
+      { title: "Monster House", video: "https://vip.opstream14.com/20220320/1893_3dbee5bc/index.m3u8", image: "https://m.media-amazon.com/images/M/MV5BYjc1Yjg5YzQtNjZlNi00ODI0LThlNmMtYzJhODQzYzcxNDFjXkEyXkFqcGc@._V1_.jpg", category: "feature", year: 2006, franchise: "", award: false },
+      { title: "Open Season", video: "https://sipt.lumicrestglobal.cyou:443/v4/lf/8egtt/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/original/w5Lctmkc1yah215Luxmci4djaiW.jpg", category: "feature", year: 2006, franchise: "Open Season", award: false },
+      { title: "Open Season 2", video: "https://slob.viatrix.space:443/v4/db/itjpn/index-f1-v1-a1.txt", image: "https://wallpapers.com/images/hd/open-season-2-poster-with-characters-4v0kaib51lnab60l.jpg", category: "sequel", year: 2008, franchise: "Open Season", award: false },
+      { title: "Open Season 3", video: "https://sdqm.aurorafieldventures.shop/v4/db/c6kmd/index-f1-v1-a1.txt", image: "https://i.pinimg.com/564x/28/b9/80/28b980aac5e29292adf0fde25102d85d.jpg", category: "sequel", year: 2010, franchise: "Open Season", award: false },
+      { title: "Open Season: Scared Silly", video: "https://sh9f.lumicrestglobal.cyou:443/v4/sc/mokna/index-f2-v1-a1.txt", image: "https://musicart.xboxlive.com/7/79b22300-0000-0000-0000-000000000002/504/image.jpg", category: "sequel", year: 2015, franchise: "Open Season", award: false },
+      { title: "Surf's Up", video: "https://sbi6.greenlineinnovations.store:443/v4/hz/m83yt/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BMGRiZDI0NWQtOTk1Yy00YmExLTgzODktNDE5N2M3MjlkMGZhXkEyXkFqcGc@._V1_.jpg", category: "feature", year: 2007, franchise: "Surf's Up", award: false },
+      { title: "Surf's Up 2: Wave Mania", video: "https://scvo.lyralis.cyou:443/v4/ic/3xu66/index-f2-v1-a1.txt", image: "https://static.tvtropes.org/pmwiki/pub/images/su2wm.jpg", category: "sequel", year: 2017, franchise: "Surf's Up", award: false },
+      { title: "Cloudy with a Chance of Meatballs", video: "https://s8v3.lumintrixdigital.online:443/v4/ox/thevb/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BMTg0MjAwNDI5MV5BMl5BanBnXkFtZTcwODkyMzg2Mg@@._V1_.jpg", category: "feature", year: 2009, franchise: "Cloudy with a Chance of Meatballs", award: false },
+      { title: "Cloudy with a Chance of Meatballs 2", video: "https://sbi6.crimsonforestventures.online:443/v4/lf/h8qqh/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/original/pCIKDz8K07ECDAZfX8DDKh7hHxR.jpg", category: "sequel", year: 2013, franchise: "Cloudy with a Chance of Meatballs", award: false },
+      { title: "The Smurfs", video: "https://spuc.azurafieldconsulting.sbs:443/v4/lf/e8ox9/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/I/81cfwsDtxGL._AC_UF894,1000_QL80_.jpg", category: "feature", year: 2011, franchise: "The Smurfs", award: false },
+      { title: "The Smurfs 2", video: "https://skra.harmonynetworks.space/v4/ox/mdqc9/index-f1-v1-a1.txt", image: "https://picfiles.alphacoders.com/384/thumb-38443.jpg", category: "sequel", year: 2013, franchise: "The Smurfs", award: false },
+      { title: "The Smurfs: The Legend of Smurfy Hollow", video: "https://shkn.aurorafieldventures.shop/v4/us/grh1e/index-f1-v1-a1.txt", image: "https://i.ytimg.com/vi/y7Omy5U7m0A/sddefault.jpg", category: "short", year: 2013, franchise: "The Smurfs", award: false },
+      { title: "Smurfs: The Lost Village", video: "https://stzm.coastlinecreativelab.space:443/v4/ck/sv3l5/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/original/1PtPR5KvMa73yIWzXLgiTQnU5rr.jpg", category: "feature", year: 2017, franchise: "The Smurfs", award: false },
+      { title: "The Smurfs: A Christmas Carol", video: "https://sipt.neoventis.sbs/v4/61/qxwe6/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BMTczMjk5NzkxOV5BMl5BanBnXkFtZTcwNDQyNzU5Ng@@._V1_.jpg", category: "short", year: 2011, franchise: "The Smurfs", award: false },
+      { title: "Arthur Christmas", video: "https://s5zt.inovara.cyou:443/v4/sc/5ecwh/index-f2-v1-a1.txt", image: "https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p8718241_p_v8_ae.jpg", category: "feature", year: 2011, franchise: "", award: false },
+      { title: "The Pirates! In an Adventure with Scientists!", video: "https://sr81.amberlineproductions.shop:443/v4/ox/qbdjw/index-f2-v1-a1.txt", image: "https://images.pearsoned-ema.com/jpeg/large/9780435143879.jpg", category: "feature", year: 2012, franchise: "", award: false },
+      { title: "Hotel Transylvania", video: "https://54pkdcyxbsxbermn.aurorafieldnetwork.store/71wl9rsjsahl/hls3/01/00361/1l53jv9k86au_h/master.txt", image: "https://ih1.redbubble.net/image.3223251000.0401/flat,750x,075,f-pad,750x1000,f8f8f8.jpg", category: "feature", year: 2012, franchise: "Hotel Transylvania", award: false },
+      { title: "Hotel Transylvania 2", video: "https://vcvkqwy2zrck.aurorafieldventures.space/zim4nn9v2jkh/hls3/01/01214/i7v448gizya2_o/master.txt", image: "https://wallpapersok.com/images/thumbnail/hotel-transylvania-2-movie-poster-1y20yiyca8eqleek.jpg", category: "sequel", year: 2015, franchise: "Hotel Transylvania", award: false },
+      { title: "Hotel Transylvania 3: Summer Vacation", video: "https://cv9fqnu812v.futurepathcareer.online/1ghkpx2e8jnal/hls3/01/01148/bj1k4wb5uqyd_h/master.txt", image: "https://m.media-amazon.com/images/I/815ZZwPNoDL._AC_UF1000,1000_QL80_.jpg", category: "sequel", year: 2018, franchise: "Hotel Transylvania", award: false },
+      { title: "Hotel Transylvania: Transformania", video: "https://sr81.velonaacademy.online:443/v4/rw/mljrd/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/original/cxUohYPyCU6NFEFSPCSkj5YAWGr.jpg", category: "sequel", year: 2022, franchise: "Hotel Transylvania", award: false },
+      { title: "Hotel Transylvania: Puppy!", video: "https://vip.opstream12.com/20220530/16990_d18a605a/index.m3u8", image: "https://m.media-amazon.com/images/M/MV5BMTY3MTE1MjE4Ml5BMl5BanBnXkFtZTgwMjEyMjI0MjI@._V1_.jpg", category: "short", year: 2017, franchise: "Hotel Transylvania", award: false },
+      { title: "Monster Pets: A Hotel Transylvania Short", video: "https://e9ccawf5esyyffhp.clarioncreststudios.sbs/qfx8jx2m0lfz/hls3/01/00544/j1jx8oj2vbkn_h/master.txt", image: "https://m.media-amazon.com/images/S/pv-target-images/19babaaa676f43f396922c248bc6a810f2f04f2c1b806a369414e4db5dec8599.jpg", category: "short", year: 2021, franchise: "Hotel Transylvania", award: false },
+      { title: "Goodnight, Mr. Foot", video: "https://spuc.merrivaleproject.store:443/v4/hz/pmvik/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BNTMxZWU2YmYtNmFlYi00MTRiLWExOGQtMDhjZTAwNjU2NDdhXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", category: "short", year: 2012, franchise: "", award: false },
+      { title: "The Angry Birds Movie", video: "https://s3ae.lumintrixagency.shop/v4/pq/nawne/index-f2-v1-a1.txt", image: "https://i.pinimg.com/736x/0d/d4/e9/0dd4e99e3871f276107f5bb14540bb00.jpg", category: "feature", year: 2016, franchise: "Angry Birds", award: false },
+      { title: "The Angry Birds Movie 2", video: "https://sxic.stellarpathholdings.sbs/v4/hz/l3xzg/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BNWUwYjkxMmUtYzNkZi00MTcwLTgzYzMtNGYwZDQ3NDkyOGQ1XkEyXkFqcGc@._V1_.jpg", category: "sequel", year: 2019, franchise: "Angry Birds", award: false },
+      { title: "Sausage Party", video: "https://sdqm.skylinehospitality.store/v4/k5/81pyr/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BMjkxOTk1MzY4MF5BMl5BanBnXkFtZTgwODQzOTU5ODE@._V1_.jpg", category: "feature", year: 2016, franchise: "", award: false },
+      { title: "The Emoji Movie", video: "https://sdqm.terraforgeinnovations.space:443/v4/np/ufets/index-f2-v1-a1.txt", image: "https://musicart.xboxlive.com/7/c6c34c00-0000-0000-0000-000000000002/504/image.jpg", category: "feature", year: 2017, franchise: "", award: false },
+      { title: "The Star", video: "https://s3ae.wanderpeakventures.space:443/v4/np/v9wg8/index-f2-v1-a1.txt", image: "https://i0.wp.com/teaser-trailer.com/wp-content/uploads/2017/10/The-Star-Australian-Poster.jpg?ssl=1", category: "feature", year: 2017, franchise: "", award: false },
+      { title: "Peter Rabbit", video: "https://sojg.amberlineproductions.shop:443/v4/hz/6nxbh/index-f1-v1-a1.txt", image: "https://irmo.bar/wp-content/uploads/2018/09/reVhoW6ptIQvGRCTRVwimzDaIPI.jpg", category: "feature", year: 2018, franchise: "Peter Rabbit", award: false },
+      { title: "Peter Rabbit 2: The Runaway", video: "https://sskt.mountainstreamlab.space:443/v4/ho/hr36n/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/I/91HRWSIpR5S._AC_UF1000,1000_QL80_.jpg", category: "feature", year: 2021, franchise: "Peter Rabbit 2: The Runaway", award: false },
+      { title: "Goosebumps", video: "https://stzm.omniquestsolutions.shop/v4/ic/tgb3y/index-f2-v1-a1.txt", image: "https://i0.wp.com/biffbampop.com/wp-content/uploads/2015/10/screen_shot_2015-08-24_at_10_00_41_pm_large.png?resize=535%2C666&ssl=1", category: "sequel", year: 2015, franchise: "Goosebumps", award: false },
+      { title: "Goosebumps 2: Haunted Halloween", video: "https://s3ae.seawindmarketing.space/v4/lf/hctzy/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BNzgxMDQ2MDUyMF5BMl5BanBnXkFtZTgwNzgyMjQyNjM@._V1_.jpg", category: "sequel", year: 2018, franchise: "Goosebumps", award: false },
+      { title: "Spider-Man: Into the Spider-Verse", video: "https://skra.velonovatechsystem.store:443/v4/js/mdvfw/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BMjMwNDkxMTgzOF5BMl5BanBnXkFtZTgwNTkwNTQ3NjM@._V1_.jpg", category: "feature", year: 2018, franchise: "Spider-Verse", award: true },
+      { title: "Spider-Man: Across the Spider-Verse", video: "https://sxix.viatrixbrandstudio.online:443/v4/m9/69uvo/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/I/81+HfwcH-lL.jpg", category: "sequel", year: 2023, franchise: "Spider-Verse", award: true },
+      { title: "Spider-Ham: Caught in a Ham", video: "https://s9dz.mindcrest.store:443/v4/db/h85jq/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BM2IxMzk1NWEtNmZjNC00ZjBkLTk1ZDYtMmFmNjg5ZDAzMzYwXkEyXkFqcGc@._V1_.jpg", category: "short", year: 2019, franchise: "Spider-Verse", award: false },
+      { title: "Hair Love", video: "https://sdqm.vinturastudios.shop:443/v4/36/olxtn/index-f2-v1-a1.txt", image: "https://upload.wikimedia.org/wikipedia/en/thumb/5/52/Hair_Love_poster.jpg/250px-Hair_Love_poster.jpg", category: "short", year: 2019, franchise: "", award: true },
+      { title: "Wish Dragon", video: "https://spuc.aurorapathcreative.space:443/v4/ho/m9q8e/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/original/lnPf6hzANL6pVQTxUlsNYSuhT5l.jpg", category: "feature", year: 2021, franchise: "", award: false },
+      { title: "The Mitchells vs. The Machines", video: "https://sh9f.novaquestfashion.site/v4/rw/cfpgu/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BNzAyOWNiMjAtNWUzMi00ZDk1LWE5NzYtNDUzMWE1Y2M0NDM2XkEyXkFqcGc@._V1_.jpg", category: "feature", year: 2021, franchise: "", award: true },
+      { title: "Vivo", video: "https://sh9f.ironbrookarchitecture.shop:443/v4/vz/sn8uc/index-f2-v1-a1.txt", image: "https://media-cache.cinematerial.com/p/500x/juruj1py/vivo-movie-poster.jpg?v=1635704050", category: "feature", year: 2021, franchise: "", award: false }
+    ];
+
+  // DOM references
+  const container = document.getElementById('movies');
+  const searchBar = document.getElementById('searchBar');
+  const clearSearch = document.getElementById('clearSearch');
+  const loadingEl = document.getElementById('loading');
+  const noResults = document.getElementById('noResults');
+
+  // Modal & playback elements (Hawkeye-style)
+  const playbackModal = document.getElementById('playback-modal');
+  const closePlaybackBtn = document.getElementById('close-playback');
+  const modalPlayer = document.getElementById('modal-player');
+  const progressBarFill = document.getElementById('progress-bar-fill');
+  const loadingSpinner = document.getElementById('loading-spinner');
+  const modalTitle = document.getElementById('modal-title');
+  const modalDescription = document.getElementById('modal-description');
+  const playBtn = document.getElementById('play-btn');
+  const watchlistCheckbox = document.getElementById('watchlist-checkbox');
+  const modalMeta = document.getElementById('modal-meta');
+
+  // Playback state
+  let currentHls = null;
+  let currentIndex = null;
+  const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const playPauseBtn = document.getElementById('playPauseBtn');
+const muteBtn = document.getElementById('muteBtn');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+const closeBtn = document.getElementById('closeBtn');
+
+
+  // Helper: always return the current <video> element
+  function getModalVideo() {
+    return document.getElementById('modal-video');
+  }
+
+  // Type detection helpers (taken from Hawkeye logic). :contentReference[oaicite:4]{index=4}
+  function isHls(u) {
+    if (!u) return false;
+    return u.includes('.m3u8') || u.includes('index-') || /index.*\.txt/i.test(u) || u.includes('manifest') || u.includes('master.m3u8');
+  }
+  function isMP4(u) {
+    return /\.mp4($|\?)/i.test(u || '');
+  }
+  function isYouTube(u) {
+    return !!(u && (u.includes('youtube.com') || u.includes('youtu.be') || u.includes('youtube-nocookie.com') || u.includes('/embed/')));
+  }
+
+  // Reset player container to a fresh <video> (destroy Hls if present). :contentReference[oaicite:5]{index=5}
+  function resetPlayerContainer() {
+    if (currentHls) {
+      try { currentHls.destroy(); } catch(e) {}
+      currentHls = null;
+    }
+    modalPlayer.innerHTML = `
+      <video id="modal-video" class="w-full" controls playsinline>
+        Your browser does not support the video tag.
+      </video>
+    `;
+  }
+
+  // Attach listeners to the video element for progress updates and ended state.
+  function attachVideoListeners() {
+    const videoEl = getModalVideo();
+    if (!videoEl) return;
+    // timeupdate for progress bar
+    videoEl.addEventListener('timeupdate', () => {
+      if (!videoEl.duration) return;
+      const progress = (videoEl.currentTime / videoEl.duration) * 100;
+      progressBarFill.style.width = progress + '%';
+    });
+    videoEl.addEventListener('ended', () => {
+      playBtn.innerHTML = '<i class="fas fa-redo mr-2"></i> Replay';
+    });
+  }
+
+  // Play / Pause
+playPauseBtn.addEventListener('click', () => {
+  const video = getModalVideo();
+  if (!video) return;
+  if (video.paused) {
+    video.play();
+    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+  } else {
+    video.pause();
+    playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+  }
+});
+
+// Previous
+prevBtn.addEventListener('click', () => {
+  if (currentIndex === null || currentIndex === 0) return;
+  const prevMovie = movies[currentIndex - 1];
+  loadingSpinner.classList.remove('hidden');
+  playInModal(prevMovie.title, prevMovie.video, prevMovie, currentIndex - 1);
+});
+
+// Next
+nextBtn.addEventListener('click', () => {
+  if (currentIndex === null || currentIndex >= movies.length - 1) return;
+  const nextMovie = movies[currentIndex + 1];
+  loadingSpinner.classList.remove('hidden');
+  playInModal(nextMovie.title, nextMovie.video, nextMovie, currentIndex + 1);
+});
+
+// Mute / Unmute
+muteBtn.addEventListener('click', () => {
+  const video = getModalVideo();
+  if (!video) return;
+  video.muted = !video.muted;
+  muteBtn.innerHTML = video.muted
+    ? '<i class="fas fa-volume-mute"></i>'
+    : '<i class="fas fa-volume-up"></i>';
+});
+
+// Fullscreen
+fullscreenBtn.addEventListener('click', () => {
+  const player = document.getElementById('modal-player');
+  if (player.requestFullscreen) player.requestFullscreen();
+});
+
+// Close
+closeBtn.addEventListener('click', closeModalHandler);
+
+
+  // Close modal and cleanup (destroy HLS, pause & unload). :contentReference[oaicite:6]{index=6}
+  function closeModalHandler() {
+    const videoEl = getModalVideo();
+    if (currentHls) { try { currentHls.destroy(); } catch(e){} currentHls = null; }
+    if (videoEl) {
+      try { videoEl.pause(); } catch(e){}
+      try { videoEl.removeAttribute('src'); videoEl.load(); } catch(e){}
+    }
+    resetPlayerContainer();
+    playbackModal.classList.remove('active');
+    document.body.style.overflow = '';
+    currentIndex = null;
+    playBtn.innerHTML = '<i class="fas fa-play mr-2"></i> Play';
+    progressBarFill.style.width = '0%';
+  }
+
+  // Core playInModal function (supports iframe hosts, YouTube, HLS, MP4; fallback to player.html redirect). :contentReference[oaicite:7]{index=7}
+  function playInModal(title, url, movie = {}, index = null) {
+    currentIndex = index;
+    modalTitle.textContent = movie.title || title || 'Playback';
+    modalDescription.textContent = movie.description || '';
+    modalMeta.textContent = (movie.year ? movie.year + ' • ' : '') + (movie.duration ? movie.duration : '');
+    watchlistCheckbox.checked = !!movie.inWatchlist;
+    progressBarFill.style.width = '0%';
+    resetPlayerContainer();
+
+    if (!url) {
+      modalTitle.textContent = (title || 'Unknown') + ' — No playable URL provided';
+      playbackModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      return;
+    }
+
+    // Hosts that are best embedded as iframe (streamtape, dood, etc.)
+    const iframeHosts = ['streamtape.com','openload.co','vidcdn','dood.', 'sbembed', 'drive.google.com'];
+    if (iframeHosts.some(h => url.includes(h))) {
+      modalPlayer.innerHTML = `<iframe src="${url}" width="100%" height="100%" allowfullscreen allow="autoplay; encrypted-media" frameborder="0"></iframe>`;
+      playbackModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      loadingSpinner.classList.add('hidden');
+      return;
+    }
+
+    // YouTube handling
+    if (isYouTube(url)) {
+      let embedUrl = url;
+      try {
+        if (url.includes('watch') && url.includes('v=')) {
+          const vid = new URLSearchParams(url.split('?')[1]).get('v');
+          if (vid) embedUrl = `https://www.youtube.com/embed/${vid}`;
+        } else if (url.includes('youtu.be/')) {
+          const parts = url.split('youtu.be/');
+          if (parts[1]) {
+            const vid = parts[1].split(/[?&]/)[0];
+            embedUrl = `https://www.youtube.com/embed/${vid}`;
+          }
+        }
+      } catch(e){}
+      modalPlayer.innerHTML = `<iframe src="${embedUrl}?autoplay=1&modestbranding=1&rel=0" width="100%" height="100%" allowfullscreen allow="autoplay; encrypted-media" frameborder="0"></iframe>`;
+      playbackModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      loadingSpinner.classList.add('hidden');
+      return;
+    }
+
+    // Use the <video> element for HLS or MP4
+    const videoEl = getModalVideo();
+
+    // HLS
+    if (isHls(url)) {
+      if (Hls.isSupported()) {
+        currentHls = new Hls();
+        currentHls.loadSource(url);
+        currentHls.attachMedia(videoEl);
+        currentHls.on(Hls.Events.MANIFEST_PARSED, () => {
+          playbackModal.classList.add('active');
+          document.body.style.overflow = 'hidden';
+          loadingSpinner.classList.add('hidden');
+          videoEl.play().catch(()=>{});
+        });
+      } else {
+        // native support (Safari)
+        videoEl.src = url;
+        playbackModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        loadingSpinner.classList.add('hidden');
+        videoEl.play().catch(()=>{});
+      }
+      attachVideoListeners();
+      return;
+    }
+
+    // MP4
+    if (isMP4(url)) {
+      videoEl.src = url;
+      playbackModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      loadingSpinner.classList.add('hidden');
+      videoEl.play().catch(()=>{});
+      attachVideoListeners();
+      return;
+    }
+
+    // Unknown type — redirect to player.html (fallback)
+    loadingSpinner.classList.add('hidden');
+    window.location.href = `player.html?title=${encodeURIComponent(title)}&video=${encodeURIComponent(url)}`;
+  }
+
+  // Play/pause button
+  playBtn.addEventListener('click', () => {
+    const videoEl = getModalVideo();
+    if (!videoEl) return;
+    if (videoEl.paused) {
+      videoEl.play();
+      playBtn.innerHTML = '<i class="fas fa-pause mr-2"></i> Pause';
+    } else {
+      videoEl.pause();
+      playBtn.innerHTML = '<i class="fas fa-play mr-2"></i> Play';
+    }
+  });
+
+  // watchlist toggle (simple client-side example)
+  watchlistCheckbox.addEventListener('change', function(){
+    if (currentIndex == null) return;
+    // implement your watchlist logic (e.g., update movies[currentIndex].inWatchlist)
+  });
+
+  // Close modal handlers
+  closePlaybackBtn.addEventListener('click', closeModalHandler);
+  playbackModal.addEventListener('click', (e) => {
+    if (e.target === playbackModal) closeModalHandler();
+  });
+
+  // Utility: create cards when movies list is present (kept from Sony code)
+  function displayMovies(list) {
+    container.innerHTML = '';
+    if (!list || list.length === 0) {
+      noResults.classList.remove('hidden');
+      return;
+    }
+    noResults.classList.add('hidden');
+    list.forEach((movie, idx) => {
+      const div = document.createElement('div');
+      div.className = 'movie-card fade-in';
+      div.innerHTML = `
+        <div class="relative overflow-hidden rounded-xl h-full cursor-pointer">
+          <img src="${movie.image || ''}" alt="${movie.title || 'Untitled'}" class="movie-poster w-full h-80 object-cover rounded-xl" loading="lazy">
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2 sm:p-4 pt-6 sm:pt-10">
+            <h3 class="text-sm sm:text-lg font-bold text-white">${movie.title || 'Untitled'}</h3>
+            <div class="flex items-center text-xs sm:text-sm text-gray-300 mt-1">
+              <span class="bg-gray-800 px-2 py-1 rounded mr-2">${movie.year || ''}</span>
+              <span class="bg-gray-800 px-2 py-1 rounded">${movie.category || 'Feature'}</span>
+            </div>
+          </div>
+          <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-40">
+            <i class="fas fa-play text-4xl text-yellow-400"></i>
+          </div>
+        </div>`;
+      div.addEventListener('click', () => {
+        loadingSpinner.classList.remove('hidden');
+        playInModal(movie.title, movie.video, movie, idx);
+      });
+      container.appendChild(div);
+    });
+  }
+
+  // Simple search and filter placeholders (keep behavior similar)
+  searchBar.addEventListener('input', () => {
+    // simple client filter; because movies array is empty now, this will show no results
+    const q = searchBar.value.trim().toLowerCase();
+    const filtered = movies.filter(m => (m.title||'').toLowerCase().includes(q));
+    displayMovies(filtered);
+  });
+  clearSearch.addEventListener('click', () => { searchBar.value=''; displayMovies(movies); });
+
+  // Initialize page (simulate load)
+  window.addEventListener('DOMContentLoaded', () => {
+    // Hide initial loader and render (with empty movies array you'll see "no results")
+    setTimeout(() => {
+      loadingEl.classList.add('hidden');
+      displayMovies(movies);
+    }, 400);
+  });
+
+  // Expose a small helper for debugging: open playback with a URL
+  // Example usage from console:
+  // playInModal('Test', 'https://path/to/your/playlist.m3u8', {title:'Test',description:'desc',year:'2024',duration:'1:20'});
+  window.playInModal = playInModal;
+</script>
+
+  <!-- ========================================= -->
+<!--        ADSTERRA FULL GLOBAL AD BLOCK      -->
+<!-- ========================================= -->
+
+<!-- ===== Banner 300x250 (inside content / under video) ===== -->
+<div id="adsterra-banner-300x250" style="text-align:center; margin:20px 0;">
+  <script type="text/javascript">
+    atOptions = {
+      'key' : '267d846b24a4cdd5fd7ab140783cec90',
+      'format' : 'iframe',
+      'height' : 250,
+      'width' : 300,
+      'params' : {}
+    };
+  </script>
+  <script type="text/javascript" src="//bowlingprosperhalfbrother.com/267d846b24a4cdd5fd7ab140783cec90/invoke.js"></script>
+</div>
+
+
+<!-- ===== Banner 728x90 (header / between content) ===== -->
+<div id="adsterra-banner-728x90" style="text-align:center; margin:20px 0;">
+  <script type="text/javascript">
+    atOptions = {
+      'key' : '5a4dc7c6c5524517e3d815b39b121f28',
+      'format' : 'iframe',
+      'height' : 90,
+      'width' : 728,
+      'params' : {}
+    };
+  </script>
+  <script type="text/javascript" src="https://contentblanksupersede.com/5a4dc7c6c5524517e3d815b39b121f28/invoke.js"></script>
+</div>
+
+
+<!-- ===== Social Bar (Site A) ===== -->
+<script type="text/javascript" src="//bowlingprosperhalfbrother.com/42/5b/58/425b58e61b66997ed4519d91d1f2dcf4.js"></script>
+
+<!-- ===== Social Bar (Site B) ===== -->
+<script type="text/javascript" src="https://contentblanksupersede.com/56/5e/44/565e44d5eee19958a58343407baab82d.js"></script>
+
+
+<!-- ===== PopUnder (Site A) – keep near </body> ===== -->
+<script type="text/javascript" src="//bowlingprosperhalfbrother.com/2d/95/e8/2d95e8d5c6532307745afa9b1be1162b.js"></script>
+
+<!-- ===== PopUnder (Site B) – keep LAST ===== -->
+<script src="https://contentblanksupersede.com/56/61/c1/5661c15aebfd7d940105d7c42e76b1cc.js"></script>
+
+<!-- ========================================= -->
+<!--           END ADSTERRA BLOCK              -->
+<!-- ========================================= -->
+
+
+</body>
+</html>
