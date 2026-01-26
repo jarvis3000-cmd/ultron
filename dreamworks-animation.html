@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>DreamWorks Universe</title>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    
+    :root {
+      --primary: #ffcc00;
+      --secondary: #111827;
+      --accent: #f59e0b;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    
+    .movie-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: center;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .movie-card:hover {
+      transform: translateY(-8px) scale(1.03);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .search-input {
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+    
+    .search-input:focus {
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.5);
+    }
+    
+    .header-glow {
+      text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+    }
+    
+    .movie-poster {
+      aspect-ratio: 2/3;
+      transition: transform 0.5s ease;
+    }
+    
+    .movie-card:hover .movie-poster {
+      transform: scale(1.05);
+    }
+    
+    .category-tab {
+      transition: all 0.3s ease;
+    }
+    
+    .category-tab:hover {
+      transform: translateY(-2px);
+    }
+    
+    .category-tab.active {
+      background-color: var(--primary);
+      color: var(--secondary);
+      font-weight: 600;
+    }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #1e293b;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #ffcc00;
+      border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #f59e0b;
+    }
+
+    /* Modal overlay kept exactly as original */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(2,6,23,0.8);
+      z-index: 9999;
+    }
+    .modal-container {
+      width: 92%;
+      max-width: 1100px;
+      background: linear-gradient(180deg, #071226, #071226);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+    }
+    .modal-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:12px 16px;
+      border-bottom:1px solid rgba(255,255,255,0.03);
+    }
+    .modal-content {
+      background: #000;
+      padding: 0;
+      position: relative;
+    }
+    .modal-video { width:100%; height:100%; background:#000; display:block; }
+    .hidden { display:none; }
+
+    .custom-controls {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  padding: 12px;
+  background: #020617;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+
+    /* === SMART FULLSCREEN VIDEO FIX (NO CROPPING, NO GAPS WHEN POSSIBLE) === */
+video:fullscreen,
+video:-webkit-full-screen,
+iframe:fullscreen,
+iframe:-webkit-full-screen {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+
+  object-fit: contain !important;
+  background-color: black;
+}
+
+/* Only cover when video aspect is cinematic */
+@media (min-aspect-ratio: 16/9) {
+  video:fullscreen,
+  video:-webkit-full-screen,
+  iframe:fullscreen,
+  iframe:-webkit-full-screen {
+    object-fit: cover !important;
+  }
+}
+
+/* === SMART FULLSCREEN VIDEO FIX (NO CROPPING, NO GAPS WHEN POSSIBLE) === */
+video:fullscreen,
+video:-webkit-full-screen,
+iframe:fullscreen,
+iframe:-webkit-full-screen {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+
+  object-fit: contain !important;
+  background-color: black;
+}
+
+/* Only cover when video aspect is cinematic */
+@media (min-aspect-ratio: 16/9) {
+  video:fullscreen,
+  video:-webkit-full-screen,
+  iframe:fullscreen,
+  iframe:-webkit-full-screen {
+    object-fit: cover !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Page markup left intact (header, search, tabs, grid, footer) -->
+<!-- (This section is exactly your original UI; I did not change markup or classes) -->
+
+<!-- Header -->
+<header class="mb-10 text-center">
+<div class="flex items-center justify-center mb-4">
+<img alt="DreamWorks Logo" class="h-16 mr-4" src="https://seeklogo.com/images/D/dreamworks-animation-logo-D43ACA139B-seeklogo.com.png"/>
+<h1 class="text-4xl md:text-5xl font-bold header-glow">
+<span class="text-yellow-400">DreamWorks</span>
+<span class="text-white">Universe</span>
+</h1>
+</div>
+<p class="text-lg text-gray-300 max-w-2xl mx-auto">
+        Explore the magical world of DreamWorks Animation. From dragons to pandas, our collection has it all!
+      </p>
+</header>
+
+  <!-- Search + categories -->
+  <div class="mb-6">
+    <input id="searchBar" class="search-input w-full p-3 rounded-md bg-[#0b1220] border border-gray-800" placeholder="Search DreamWorks..."/>
+    <div class="flex flex-wrap justify-center gap-2 mt-4">
+      <button class="category-tab px-4 py-2 rounded-full bg-gray-800 text-white hover:bg-yellow-400 hover:text-gray-900 active" data-category="all">
+        All Movies
+      </button>
+      <button class="category-tab px-4 py-2 rounded-full bg-gray-800 text-white hover:bg-yellow-400 hover:text-gray-900" data-category="shrek">
+        Shrek Series
+      </button>
+      <button class="category-tab px-4 py-2 rounded-full bg-gray-800 text-white hover:bg-yellow-400 hover:text-gray-900" data-category="kungfu">
+        Kung Fu Panda
+      </button>
+      <button class="category-tab px-4 py-2 rounded-full bg-gray-800 text-white hover:bg-yellow-400 hover:text-gray-900" data-category="dragon">
+        How to Train Your Dragon
+      </button>
+      <button class="category-tab px-4 py-2 rounded-full bg-gray-800 text-white hover:bg-yellow-400 hover:text-gray-900" data-category="madagascar">
+        Madagascar
+      </button>
+      <button class="category-tab px-4 py-2 rounded-full bg-gray-800 text-white hover:bg-yellow-400 hover:text-gray-900" data-category="bad">
+        The Bad Guys
+      </button>
+    </div>
+  </div>
+
+  <!-- Movies Grid -->
+  <div class="mb-12">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6" id="movies"></div>
+  </div>
+
+  <!-- Footer -->
+<footer class="mt-20 py-6 bg-gray-900 bg-opacity-50">
+<div class="container mx-auto px-4 text-center text-gray-400">
+<div class="flex justify-center space-x-6 mb-4">
+<a class="hover:text-yellow-400 transition-colors" href="#">
+<i class="fab fa-facebook-f"></i>
+</a>
+<a class="hover:text-yellow-400 transition-colors" href="#">
+<i class="fab fa-twitter"></i>
+</a>
+<a class="hover:text-yellow-400 transition-colors" href="https://www.instagram.com/stark_4152">
+<i class="fab fa-instagram"></i>
+</a>
+<a class="hover:text-yellow-400 transition-colors" href="https://www.youtube.com/channel/UCYwTAs1PRVHbq4LnCHEEicw">
+<i class="fab fa-youtube"></i>
+</a>
+</div>
+<p>© DreamWorks Universe. All rights reserved.</p>
+<p class="text-sm mt-2">This is a fan-made project and not affiliated with DreamWorks Animation Studios.</p>
+</div>
+</footer>
+
+<!-- Modal Player (UI preserved exactly) -->
+<div id="video-modal" class="modal-overlay hidden">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3 id="modal-title" class="text-xl font-bold"></h3>
+      <button class="modal-close" id="modal-close-btn">&times;</button>
+    </div>
+    <div class="modal-content">
+      <!-- The inner player will be swapped dynamically by the script below.
+           By default we keep a <video> element for MP4/HLS playback. -->
+      <div id="modal-player-wrapper">
+        <video id="modal-video" class="modal-video" controls playsinline></video>
+        <div class="custom-controls">
+  <button id="prevBtn">⏮</button>
+  <button id="playPauseBtn">⏯</button>
+  <button id="nextBtn">⏭</button>
+  <button id="muteBtn">🔇</button>
+  <button id="fullscreenBtn">⛶</button>
+  <button id="closeBtn">✕</button>
+</div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HLS.js for .m3u8 support -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.1/dist/hls.min.js"></script>
+
+<script>
+
+
+const movies = [
+      { title: "The Wild Robot", video: "https://sskt.hushfieldproductions.space:443/v4/k5/j5juh/index-f2-v1-a1.txt", image: "https://assets-in.bmscdn.com/iedb/movies/images/mobile/thumbnail/xlarge/the-wild-robot-sensory-friendly-screening-et00417334-1729776735.jpg", categories: ["all"] },
+      { title: "Turbo", video: "https://sdqm.evercresthospitality.space:443/v4/xq/veies/index-f2-v1-a1.txt", image: "https://i.ebayimg.com/images/g/WEIAAOSwGJlgs8Ll/s-l1200.jpg", categories: ["all"] },
+      { title: "The Croods", video: "https://s5zt.lumintrixagency.shop:443/v4/ck/ve6on/index-f2-v1-a1.txt", image: "https://www.scannain.com/media/the-croods-poster2.jpg", categories: ["all"] },
+      { title: "The Croods: A New Age", video: "https://sdqm.mirantiafabrics.cyou/v4/ic/oavzo/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/original/hmYV3D2PNNgliQpMMYfBkuXuHN2.jpg", categories: ["all"] },
+      { title: "Mr. Peabody & Sherman", video: "https://sr81.ironbrookbuilders.cyou:443/v4/np/rzldl/index-f2-v1-a1.txt", image: "https://i.ebayimg.com/images/g/GcYAAOSwYlNc9AfS/s-l1200.jpg", categories: ["all"] },
+      { title: "Over the Hedge", video: "https://s3ae.mindspireleadership.space:443/v4/sc/chsgt/index-f2-v1-a1.txt", image: "https://i.ebayimg.com/images/g/ILcAAOSwciRjCXrE/s-l1200.png", categories: ["all"] },
+      { title: "Rise of the Guardians", video: "https://smeb.lumintrixdigital.online:443/v4/lf/nfoqv/index-f2-v1-a1.txt", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQDtgCnHb5iHmErNj2_ZD8xZ9EgE5O3ZUsmEg&s", categories: ["all"] },
+      { title: "The Bad Guys", video: "https://i60k6cbfsa8z.silverpeakenterprises.online/m2q5ea5w42hk/hls3/01/00413/kmvuvksfdpk4_h/master.txt", image: "https://olathelibrary.librarycalendar.com/sites/default/files/2023-01/gdc101730_1_8452.jpg", categories: ["all", "bad"] },
+      { title: "The Bad Guys 2", video: "https://vip.opstream90.com:443/20250820/10916_60e6a238/3000k/hls/mixed.m3u8", image: "https://image.tmdb.org/t/p/original/c1msaKf1wyuKcmLjjJd6rIBPFcd.jpg", categories: ["all", "bad"] },
+      { title: "The Bad Guys: A Very Bad Holiday", video: "https://sedrfmwrpjxatem5.bluehaveninteractive.online/3wegyoxZ9JubI3z/hls3/01/03257/0ggxlzk9g22d_,n,h,.urlset/master.txt", image: "https://media.themoviedb.org/t/p/w500/er0Gth3Tr279hFq1xeKdYxhcleO.jpg", categories: ["all", "bad"] },
+      { title: "The Bad Guys: Haunted Heist", video: "https://sdqm.virelodesignagency.cyou/v4/us/39iv9/cf-master.txt?v=1736730542", image: "https://m.media-amazon.com/images/M/MV5BZDQ0NTRkNGMtMDM2NS00ZTkxLWE3NWYtNzE3MTQ4YTg4Njg2XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", categories: ["all", "bad"] },
+      { title: "The Bad Guys: Little Lies and Alibis", video: "https://spok.auralithagency.online:443/v4/c5u/51si6y/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w780/9mLRpo992kIpnYQJKqfLFsrXr3m.jpg", categories: ["all", "bad"] },
+      { title: "Ruby Gillman, Teenage Kraken", video: "https://s5zt.symphoniaevents.sbs/v4/pq/mpkvr/index-f2-v1-a1.txt", image: "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/40a1659c-1b14-4142-bb80-498adf368d8c/dfwq3tm-ceb25f03-5e85-4ba6-ba5d-2b166ee8e2cc.jpg/v1/fill/w_768,h_1024,q_75,strp/ruby_gillman__teenage_kraken__2023__poster_by_mrscientific_dfwq3tm-fullview.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTAyNCIsInBhdGgiOiJcL2ZcLzQwYTE2NTljLTFiMTQtNDE0Mi1iYjgwLTQ5OGFkZjM2OGQ4Y1wvZGZ3cTN0bS1jZWIyNWYwMy01ZTg1LTRiYTYtYmE1ZC0yYjE2NmVlOGUyY2MuanBnIiwid2lkdGgiOiI8PTc2OCJ9XV0sImF1ZCI6WyJ1cm46c2VydmljZTppbWFnZS5vcGVyYXRpb25zIl19.5FPqnPkNMjnUOKDDOlZ-QJ7fRlXU7-DhAG76td5xI3o", categories: ["all"] },
+      { title: "Dog Man", video: "https://s5zt.auronetworkpartners.shop/v4/db/ppdb5/index-f2-v1-a1.txt", image: "https://lh5.googleusercontent.com/proxy/qhSEKRfi94aRywTxdohANyJRx9d4k_p3y7O76Gh224A8dWpXWkD_hL1nNvjxWSQWjmJg3Sf0tlA14ZfmCdz8m9GL4QQ", categories: ["all"] },
+      { title: "Antz", video: "https://s3ae.lumintrixagency.shop:443/v4/36/pcdkr/index-f2-v1-a1.txt", image: "https://wallpapers.com/images/featured/antz-arwmkvfcy92tgu22.jpg", categories: ["all"] },
+      { title: "The Prince of Egypt", video: "https://sr81.aqualisnetworkmedia.store:443/v4/db/561hp/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/original/ny4qEH74SGmM4F8uNBH4rgSZmdn.jpg", categories: ["all"] },
+      { title: "Monsters vs. Aliens", video: "https://spuc.newterrafoods.store:443/v4/qu/68tnr/index-f1-v1-a1.txt", image: "https://i.pinimg.com/736x/6e/db/ce/6edbced1be1664eae93d39a7a9afedbd.jpg", categories: ["all"] },
+      { title: "Night of the Living Carrots", video: "00", image: "https://m.media-amazon.com/images/M/MV5BMDUwNzc2NTctNmVhMy00ZTFiLTliMDgtMDA2YzM4MGRmNGExXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", categories: ["all"] },
+      { title: "How to Train Your Dragon", video: "https://vip.opstream12.com/20220319/4331_3db8921e/index.m3u8", image: "https://myhotposters.com/cdn/shop/products/HP2978_07892a03-edd9-408e-9e3c-47dc0fc6d3b5_1024x1024.jpg?v=1745713654", categories: ["all", "dragon"] },
+      { title: "How to Train Your Dragon 2", video: "https://vip.opstream14.com/20220307/875_b1fec845/index.m3u8", image: "https://lumiere-a.akamaihd.net/v1/images/httyd2_kagraphic_584x800_940b4931.jpeg?region=0%2C0%2C584%2C800", categories: ["all", "dragon"] },
+      { title: "How to Train Your Dragon: The Hidden World", video: "https://vip.opstream12.com/20220320/4398_f9dff733/index.m3u8", image: "https://resizing.flixster.com/QOJfm87DpFPvMWBjy767w9Zeyrk=/fit-in/705x460/v2/https://resizing.flixster.com/vs4NrXMCUz5F1XVLsisv9N5u1Hc=/ems.cHJkLWVtcy1hc3NldHMvbW92aWVzL2U3YmIxNWJiLTc0YjEtNGU5ZS04YzQ0LWFiZmY3MDk1OTU3My53ZWJw", categories: ["all", "dragon"] },
+      { title: "Dragons: Dawn Of The Dragon Racers", video: "https://sr81.mindspireeducation.cyou/v4/qu/pe5ar/cf-master.txt?v=1739150829", image: "https://m.media-amazon.com/images/M/MV5BZTAzNzhlZDktNGZmZi00ODkwLTgwZTYtYmIzZDI2OWI5M2Q2XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", categories: ["all", "dragon"] },
+      { title: "Book of Dragons", video: "https://sdqm.bionyxarchitects.cyou:443/v4/ox/6jdqu/index-f2-v1-a1.txt", image: "https://images.jdmagicbox.com/comp/jd_social/news/2018jul30/image-173662-fnxuneeboj.jpg", categories: ["all", "dragon"] },
+      { title: "Dragons: Gift of the Night Fury", video: "https://sxix.rivonamarketing.cyou/v4/ox/hc63a/cf-master.txt?v=1733741620", image: "https://m.media-amazon.com/images/M/MV5BYmRjYWU2MjAtOTFjNC00MTA0LWE2NzEtZmM1ODM0ZDMyYzMxXkEyXkFqcGc@._V1_.jpg", categories: ["all", "dragon"] },
+      { title: "How to Train Your Dragon: Homecoming", video: "https://vip.opstream12.com/20220322/4724_fc68c467/index.m3u8", image: "https://upload.wikimedia.org/wikipedia/en/5/5d/How_to_Train_Your_Dragon_Homecoming_poster.jpg", categories: ["all", "dragon"] },
+      { title: "How to Train Your Dragon", video: "https://cyyroro04xrqr.solventrainnovations.shop/0gIImnp7KPuSk/hls3/01/10621/q3w66yzevcfa_l/master.txt", image: "https://media-cache.cinematerial.com/p/500x/mqhqiscc/how-to-train-your-dragon-brazilian-movie-poster.jpg?v=1746976229", categories: ["all", "dragon"] },
+      { title: "The Road to El Dorado", video: "https://spok.bluehavenhospitality.sbs:443/v4/db/8ydzp/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BZDQ0NTRkNGMtMDM2NS00ZTkxLWE3NWYtNzE3MTQ4YTg4Njg2XkEyXkFqcGc@._V1_.jpg", categories: ["all"] },
+      { title: "Chicken Run", video: "https://s6sy.lumicrestglobal.cyou:443/v4/sc/enym5/index-f1-v1-a1.txt", image: "https://i.pinimg.com/736x/7c/3f/a5/7c3fa5c4a8b5f3bf5fcbd0d03c03fa29.jpg", categories: ["all"] },
+      { title: "Sinbad: Legend of the Seven Seas", video: "https://spuc.meliora.cyou:443/v4/il/vmifz/index-f1-v1-a1.txt", image: "https://i.pinimg.com/736x/69/28/4e/69284e65d225bdc5cf674fdc0af0168f.jpg", categories: ["all"] },
+      { title: "Megamind", video: "https://sxic.luminairemotion.online/v4/9a/8gejk/index-f2-v1-a1.txt", image: "https://cdn11.bigcommerce.com/s-yzgoj/images/stencil/1280x1280/products/2860738/5916924/MOVGB90793__74224.1679568855.jpg?c=2", categories: ["all"] },
+      { title: "Megamind: The Button of Doom", video: "https://spuc.zenithstrategylabs.online:443/v4/61/8mzhl/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BNzlmOTc2OTQtZjI3MC00YmZjLTk0ZTctOTQyZWY4ZjgyMDliXkEyXkFqcGc@._V1_.jpg", categories: ["all"] },
+      { title: "Megamind vs the Doom Syndicate", video: "https://sr81.moonstreamspace.space/v4/ty/sobki/index-f2-v1-a1.txt", image: "https://upload.wikimedia.org/wikipedia/en/2/24/Megamind_vs._the_Doom_Syndicate_poster.jpg", categories: ["all"] },
+      { title: "Flushed Away", video: "https://spok.bluehavenhospitality.sbs:443/v4/js/9168a/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/I/51inhQJDHaL._AC_UF894,1000_QL80_.jpg", categories: ["all"] },
+      { title: "Wallace & Gromit: The Curse of the Were-Rabbit", video: "https://skra.obsidianfitnesslab.sbs:443/v4/ic/q3bhla/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BM2JkOTRkZTctN2ZiMy00ZGRmLWJkNzQtOGJkNmFiM2ZjNjYzXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", categories: ["all"] },
+      { title: "Shrek", video: "https://scvo.obsidianfitnesslab.sbs:443/v4/61/8g6ix/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/I/51x+A0StbHL._AC_UF894,1000_QL80_.jpg", categories: ["all", "shrek"] },
+      { title: "Shrek 2", video: "https://sunl.bellavueartfoundation.store/v4/9a/3ie93/index-f1-v1-a1.txt", image: "https://i.pinimg.com/736x/56/8f/c0/568fc030f58881e41377eee8a63e9a7c.jpg", categories: ["all", "shrek"] },
+      { title: "Shrek the Third", video: "https://sr81.greenlineinnovations.store:443/v4/k5/gydxn/index-f2-v1-a1.txt", image: "https://musicart.xboxlive.com/7/e5de0700-0000-0000-0000-000000000002/504/image.jpg", categories: ["all", "shrek"] },
+      { title: "Shrek Forever After", video: "https://smeb.blueridgecreatives.store/v4/xq/xrtd6/index-f1-v1-a1.txt", image: "https://img3.hulu.com/user/v3/artwork/042e044b-948a-49ca-ba31-ea4dc49d50dd?base_image_bucket_name=image_manager&base_image=23eac649-d22c-4909-a5ff-83244f8af9de&size=458x687&format=webp", categories: ["all", "shrek"] },
+      { title: "Scared Shrekless", video: "https://sj3l.inovara.cyou:443/v4/rw/ssmi3/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BMDg0NDUwYjItMmRjYi00MzNjLTkyY2EtM2FiMjE1NWY4ZTY0XkEyXkFqcGc@._V1_.jpg", categories: ["all", "shrek"] },
+      { title: "Spirit: Stallion of the Cimarron", video: "https://s3ae.merridianart.space/v4/6s/d5ip9/index-f1-v1-a1.txt", image: "https://i.pinimg.com/564x/f0/d1/83/f0d183e34676409e473ed31121a08653.jpg", categories: ["all"] },
+      { title: "Spirit Riding Free: Spirit of Christmas", video: "https://spuc.oriontraveldynamics.sbs:443/v4/ic/r9ist/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BM2U4OWE1ZGItODU2MC00Mjg0LTg0YmYtNDY0ZjdkOGY2NWM0XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", categories: ["all"] },
+      { title: "Spirit Untamed", video: "https://slob.clarionforge.online:443/v4/k5/xlnqs/index-f2-v1-a1.txt", image: "https://i.pinimg.com/736x/15/da/f5/15daf52faf31a5d0050fb11af5d76ff0.jpg", categories: ["all"] },
+      { title: "Orion and the Dark", video: "https://sxic.merrivaleproject.store/v4/6s/5fj16/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BMzgwNGU0NzEtZjMyMy00Mjc5LWFiMmYtMzIxNmY1OTIwYmU3XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", categories: ["all"] },
+      { title: "Madagascar", video: "https://sdqm.merridianproductions.store:443/v4/us/91uo9/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/original/zMpJY5CJKUufG9OTw0In4eAFqPX.jpg", categories: ["all", "madagascar"] },
+      { title: "Madagascar: Escape 2 Africa", video: "https://spuc.solenium.space:443/v4/ck/pai8n/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BNDM3ZWM1NmUtNTEzMC00Y2JiLTk4OWEtMDI3NDMxYzJmMDIxXkEyXkFqcGc@._V1_.jpg", categories: ["all", "madagascar"] },
+      { title: "The Penguins of Madagascar", video: "https://sbi6.silverforgeindustries.store:443/v4/61/6rztu/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/I/71+diUvylIL._AC_UF894,1000_QL80_.jpg", categories: ["all", "madagascar"] },
+      { title: "Madly Madagascar", video: "https://s9dz.aurorafieldventures.shop/v4/np/ltc1n/cf-master.txt?v=1732889983", image: "https://m.media-amazon.com/images/M/MV5BZWM4NDFlNDktMGRjNC00ZDA1LWFjNWItNDhlMzk4ZGUwNDQ2XkEyXkFqcGc@._V1_.jpg", categories: ["all", "madagascar"] },
+      { title: "Madagascar 3: Europe's Most Wanted", video: "https://s6p9.solenium.space:443/v4/qu/3gjru/index-f2-v1-a1.txt", image: "https://i.pinimg.com/736x/6c/7d/c5/6c7dc5ca5dfb6e3f6ae9e7919cbc7953.jpg", categories: ["all", "madagascar"] },
+      { title: "The Madagascar Penguins in a Christmas Caper", video: "https://s6sy.satoriwellbeinglab.shop:443/v4/ic/swo5r/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BM2ViNTZkMjEtMjgyZC00OTQ0LTk5OWItZjFmYjIyYmU1N2U5XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", categories: ["all", "madagascar"] },
+      { title: "Merry Madagascar", video: "https://sxix.xylonadynamics.cyou:443/v4/sc/o1h69/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BYjZmMTNlZDctMDNjNS00YmU3LWJiMGItMWEzOTg2NWU0N2Y0XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", categories: ["all", "madagascar"] },
+      { title: "Shark Tale", video: "https://sxic.aqualisnetworkmedia.store/v4/36/celuf/index-f2-v1-a1.txt", image: "https://wallpapers.com/images/hd/shark-tale-poster-main-cast-42fkaqy0i1r13vf7.jpg", categories: ["all"] },
+      { title: "Bee Movie", video: "https://spuc.inovara.cyou:443/v4/61/choxd/index-f2-v1-a1.txt", image: "https://i.pinimg.com/736x/5b/75/b6/5b75b6b751f7ecd284fc8acc468d4497.jpg", categories: ["all"] },
+      { title: "Kung Fu Panda", video: "https://vip.opstream11.com/20221125/37774_4bb7d7bf/index.m3u8", image: "https://i.pinimg.com/474x/f3/e3/63/f3e3635567b41a18a413936cc6900860.jpg", categories: ["all", "kungfu"] },
+      { title: "Kung Fu Panda 2", video: "https://vip.opstream11.com/20221125/37772_1046f671/index.m3u8", image: "https://musicart.xboxlive.com/7/c56f2100-0000-0000-0000-000000000002/504/image.jpg", categories: ["all", "kungfu"] },
+      { title: "Kung Fu Panda 3", video: "https://vip.opstream11.com/20221125/37773_b650a715/index.m3u8", image: "https://image.tmdb.org/t/p/original/jRlwKj4D7AiJ3l07PTfsTjPuhYA.jpg", categories: ["all", "kungfu"] },
+      { title: "Kung Fu Panda 4", video: "https://spuc.auroravisionfactory.shop:443/v4/ho/xsle8/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/original/AgxyewLl8EHBMEmBzzJqcI3YkMe.jpg", categories: ["all", "kungfu"] },
+      { title: "Kung Fu Panda: Secrets of the Furious Five", video: "https://s8v3.zironixart.cyou:443/v4/mf/djsll3/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/S/pv-target-images/0cb93138144e0f7c16e799bbac247fe1557632ab27529de9bc65353c9656ded9.jpg", categories: ["all", "kungfu"] },
+      { title: "Kung Fu Panda Holiday", video: "https://slob.merridianart.space:443/v4/ic/vs1cx/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/S/pv-target-images/adf6a687fee2ec6909f80a273c2a55116732c00b5081df0c5605db001e8566ca.jpg", categories: ["all", "kungfu"] },
+      { title: "Kung Fu Panda: Secrets of the Masters", video: "https://sqtd.lumintrixeducation.sbs:443/v4/xq/mrlve/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BNWYyNTdmNmUtY2Q5Yy00ZmUwLWJkZTYtNDIzZjE4OTA2Y2MyXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", categories: ["all", "kungfu"] },
+      { title: "Kung Fu Panda: Secrets of the Scroll", video: "https://sbi6.greenhavenconsult.sbs/v4/db/3siwl/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BOTNjOWUxOTMtMjdjZi00NDYwLWJmZGQtZmI0MDA5ODk2MDY1XkEyXkFqcGc@._V1_.jpg", categories: ["all", "kungfu"] },
+     { title: "Puss in Boots", video: "https://s3ae.satoriwell.online:443/v4/xq/3699r/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BOTQwMGU5YTEtYmQzMy00MTM0LWFhNzAtOGY2Yzc1MzBkYTYyXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", categories: ["all"] },
+      { title: "Puss in Boots: The Three Diablos", video: "https://s9dz.silverpathway.sbs/v4/qu/i85zw/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/ptvbHUWpU8Nh6vrmSvjx4ESDgfC.jpg", categories: ["all"] },
+      { title: "Puss in Boots: The Last Wish", video: "https://sipt.viatrixartstudio.space:443/v4/ty/d3o5d/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/original/jGOSeZ5wzh1PSfjTgYkWGGM4DZp.jpg", categories: ["all"] },
+      { title: "Puss in Book: Trapped in an Epic Tale", video: "https://scvo.nevalonmedia.cyou:443/v4/sc/u1jgh/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/original/ojNBs1oxjCxV1uKjLhIiLVPufVd.jpg", categories: ["all"] },
+      { title: "Home", video: "https://sskt.mindspireeducation.cyou/v4/36/k5ten/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/usFenYnk6mr8C62dB1MoAfSWMGR.jpg", categories: ["all"] },
+      { title: "Almost Home", video: "https://www.youtube.com/embed/ShNmekPX9HQ", image: "https://image.tmdb.org/t/p/w500/bwG6eNxGAy4qNJpzo6OjDFmKpFi.jpg", categories: ["all"] },
+      { title: "Trolls", video: "https://spuc.zenithwellbeing.site:443/v4/ic/nzhtm/index-f2-v1-a1.txt", image: "https://i.pinimg.com/736x/42/55/fd/4255fdc06a38189e7483bcf640ed8d3f.jpg", categories: ["all"] },
+      { title: "Trolls Holiday", video: "https://s5zt.aqualisnetworkmedia.store/v4/9a/nbu98/index-f2-v1-a1.txt", image: "https://static.tvtropes.org/pmwiki/pub/images/2fc133a481547bbad1e73e72511c7f1c.jpg", categories: ["all"] },
+      { title: "Trolls World Tour", video: "https://spuc.auroramedialimited.space:443/v4/rw/3yqxv/index-f2-v1-a1.txt", image: "https://musicart.xboxlive.com/7/234b5100-0000-0000-0000-000000000002/504/image.jpg", categories: ["all"] },
+      { title: "Trolls Holiday in Harmony", video: "https://stzm.omnivoracatering.sbs/v4/vz/g9giu/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BOTE4NzhhZjgtOWZlZS00NGVmLTgxZGMtNDllZmFhNmYwZGExXkEyXkFqcGc@._V1_.jpg", categories: ["all"] },
+      { title: "Trolls Band Together", video: "https://sr81.silverlineacademia.online:443/v4/k5/xs6vu/index-f2-v1-a1.txt", image: "https://www.movieposters.com/cdn/shop/files/scan002_03983f65-07c4-4ba5-917c-7343db362a82_480x.progressive.jpg?v=1692109126", categories: ["all"] },
+      { title: "Trollhunters: Rise of the Titans", video: "https://slob.squir-a1.txt", image: "https://i.pinimg.com/736x/97/6d/a8/976da8d484fb3829e54bd419a3e6e9cb.jpg", categories: ["all"] },
+      { title: "The Boss Baby", video: "https://s9dz.mindspireeducation.cyou/v4/9a/hl5r3r/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BMTg5MzUxNzgxNV5BMl5BanBnXkFtZTgwMTM2NzQ3MjI@._V1_.jpg", categories: ["all"] },
+      { title: "The Boss Baby: Family Business", video: "https://spuc.greenhavenconsult.sbs/v4/6s/u3zmc/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BZjJiYjgzMzctZmE5OC00ODA2LWE1MzktZDdlMDFiNmM5OGQ1XkEyXkFqcGc@._V1_.jpg", categories: ["all"] },
+      { title: "The Boss Baby: Christmas Bonus", video: "https://sojg.aqualisnetworkmedia.store:443/v4/il/g9iuq/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BYjZmMTNlZDctMDNjNS00YmU3LWJiMGItMWEzOTg2NWU0N2Y0XkEyXkFqcGc@._V1_.jpg", categories: ["all"] },
+      { title: "Captain Underpants: The First Epic Movie", video: "https://sojg.claravonartistrylab.store:443/v4/db/mqv6i/index-f2-v1-a1.txt", image: "https://assets-in.bmscdn.com/iedb/movies/images/mobile/thumbnail/xlarge/captain-underpants-et00047162-01-10-2016-03-13-45.jpg", categories: ["all"] },
+      { title: "The Spooky Tale of Captain Underpants Hack-a-ween", video: "https://s6p9.moonstreamspace.space:443/v4/qu/ij3sh/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BODU4NDVmMTctNzQ5ZS00YzIzLTlmYzAtNDYzNDhjN2IzZTdhXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", categories: ["all"] },
+      { title: "Bilby", video: "https://sxix.greenpulseventures.store:443/v4/ox/iqkyp/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BMTNmYWQwM2QtODk3ZS00YWU0LWJiMjQtYjVlZjZhYzJiMjg2XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", categories: ["all"] },
+      { title: "Abominable", video: "https://sipt.fiorellagardenshop.shop/v4/lf/bkvgc/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/I/71b8OCPx6TL._AC_UF894,1000_QL80_.jpg", categories: ["all"] },
+      { title: "To: Gerard", video: "https://spuc.valorpath.online:443/v4/sc/ejqc5/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BZTQzMzZmZjQtOGZlNS00YmRiLWI3NWItNTNjOTNmNDc2MTUwXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", categories: ["all"] },
+    ];
+
+/* DOM refs (UI kept same) */
+const container = document.getElementById('movies');
+const searchBar = document.getElementById('searchBar');
+const categoryTabs = document.querySelectorAll('.category-tab');
+
+const videoModal = document.getElementById('video-modal');
+const modalPlayerWrapper = document.getElementById('modal-player-wrapper');
+const modalVideoId = 'modal-video';
+const modalTitle = document.getElementById('modal-title');
+const modalCloseBtn = document.getElementById('modal-close-btn');
+
+/* Playback state */
+let currentHls = null;
+let currentFiltered = [];
+let currentIndex = null;
+
+/* Helpers for type detection */
+function isMP4(url) { return /\.mp4($|\?)/i.test((url||'')); }
+function isHls(url) {
+  if (!url) return false;
+  return url.includes('.m3u8') || url.includes('index-') || /index.*\.txt/i.test(url) || url.includes('manifest') || url.includes('master');
+}
+function isYouTube(url) {
+  if (!url) return false;
+  return url.includes('youtube.com') || url.includes('youtu.be') || url.includes('youtube-nocookie.com') || url.includes('/embed/');
+}
+
+/* Reset player wrapper to fresh video element */
+function resetPlayerWrapper() {
+  if (currentHls) {
+    try { currentHls.destroy(); } catch (e) {}
+    currentHls = null;
+  }
+
+  modalPlayerWrapper.innerHTML = `
+    <video id="${modalVideoId}" class="modal-video" controls playsinline></video>
+    ${modalControlsHTML}
+  `;
+
+  bindModalControls();
+}
+
+function bindModalControls() {
+  const video = document.getElementById(modalVideoId);
+  if (!video) return;
+
+  document.getElementById('playPauseBtn').onclick = () => {
+    video.paused ? video.play() : video.pause();
+  };
+
+  document.getElementById('muteBtn').onclick = () => {
+    video.muted = !video.muted;
+  };
+
+  document.getElementById('fullscreenBtn').onclick = () => {
+    if (!document.fullscreenElement) {
+      video.requestFullscreen().catch(()=>{});
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  document.getElementById('closeBtn').onclick = () => {
+    modalCloseBtn.click();
+  };
+
+  document.getElementById('prevBtn').onclick = () => {
+    if (currentIndex > 0) {
+      playInModal(currentFiltered, currentIndex - 1);
+    }
+  };
+
+  document.getElementById('nextBtn').onclick = () => {
+    if (currentIndex < currentFiltered.length - 1) {
+      playInModal(currentFiltered, currentIndex + 1);
+    }
+  };
+}
+
+
+/* Show error helper (keeps UI minimal) */
+function showPlayerError(msg) {
+  console.warn(msg);
+  // Could display a small UI banner if desired — keeping it minimal to preserve original UI
+}
+
+/* Close modal and cleanup */
+function closeModal() {
+  if (currentHls) {
+    try { currentHls.destroy(); } catch(e) {}
+    currentHls = null;
+  }
+  const v = document.getElementById(modalVideoId);
+  if (v) {
+    try { v.pause(); } catch(e){}
+    try { v.removeAttribute('src'); v.load(); } catch(e){}
+  }
+  resetPlayerWrapper();
+  videoModal.classList.add('hidden');
+  document.body.style.overflow = '';
+  currentIndex = null;
+  currentFiltered = [];
+}
+
+/* Core play-in-modal (Tukaram/Hawkeye behavior) */
+function playInModal(list, index) {
+  if (!Array.isArray(list) || !list.length || index == null || index < 0 || index >= list.length) {
+    showPlayerError('Invalid playback request'); return;
+  }
+  currentFiltered = list;
+  currentIndex = index;
+  const movie = list[index];
+
+  modalTitle.textContent = movie.title || 'Untitled';
+  resetPlayerWrapper();
+  videoModal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+
+  // decide src
+  let src = '';
+  if (typeof movie.video === 'object' && movie.video !== null) {
+    src = movie.video.high || movie.video.medium || movie.video.low || Object.values(movie.video)[0];
+  } else {
+    src = movie.video;
+  }
+  if (!src) {
+    showPlayerError('No playable URL — redirecting to player page.');
+    setTimeout(()=> window.location.href = `player.html?title=${encodeURIComponent(movie.title||'')}&video=`, 400);
+    return;
+  }
+  const lc = (src||'').toLowerCase();
+
+  // iframe hosts (embed)
+  if (lc.includes('streamtape.com') || lc.includes('dood') || lc.includes('vidcdn') || lc.includes('ok.ru') || lc.includes('mega.nz') || lc.includes('drive.google.com') || lc.includes('openload')) {
+    modalPlayerWrapper.innerHTML = `<iframe src="${src}" width="100%" height="100%" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+    return;
+  }
+
+  // YouTube conversion to embed
+  if (isYouTube(src)) {
+    let embed = src;
+    try {
+      if (src.includes('watch') && src.includes('v=')) {
+        const v = new URLSearchParams(src.split('?')[1]).get('v');
+        if (v) embed = `https://www.youtube.com/embed/${v}`;
+      } else if (src.includes('youtu.be/')) {
+        const p = src.split('youtu.be/')[1].split(/[?&]/)[0];
+        if (p) embed = `https://www.youtube.com/embed/${p}`;
+      }
+    } catch(e){}
+    modalPlayerWrapper.innerHTML = `<iframe src="${embed}?autoplay=1&modestbranding=1&rel=0" width="100%" height="100%" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+    return;
+  }
+
+  // HLS (.m3u8)
+  if (isHls(src)) {
+    const v = document.getElementById(modalVideoId);
+    if (!v) {
+      showPlayerError('Video element missing'); return;
+    }
+    if (window.Hls && Hls.isSupported()) {
+      currentHls = new Hls();
+      try {
+        currentHls.loadSource(src);
+        currentHls.attachMedia(v);
+      } catch(e) { console.warn('HLS attach error', e); }
+      currentHls.on(Hls.Events.MANIFEST_PARSED, function() {
+        try { v.play().catch(()=>{}); } catch(e){}
+      });
+      currentHls.on(Hls.Events.ERROR, function(event, data) {
+        console.warn('HLS error', data);
+        if (data && data.fatal) {
+          try { currentHls.destroy(); } catch(e){}
+          currentHls = null;
+          showPlayerError('HLS failed — opening external player.');
+          setTimeout(()=> window.location.href = `player.html?title=${encodeURIComponent(movie.title||'')}&video=${encodeURIComponent(src||'')}`, 700);
+        }
+      });
+    } else if (v.canPlayType && v.canPlayType('application/vnd.apple.mpegurl')) {
+      v.src = src;
+      v.play().catch(()=>{});
+    } else {
+      showPlayerError('HLS not supported — redirecting.');
+      setTimeout(()=> window.location.href = `player.html?title=${encodeURIComponent(movie.title||'')}&video=${encodeURIComponent(src||'')}`, 700);
+    }
+    return;
+  }
+
+  // MP4 direct
+  if (isMP4(src)) {
+    const v = document.getElementById(modalVideoId);
+    if (!v) { window.location.href = `player.html?title=${encodeURIComponent(movie.title||'')}&video=${encodeURIComponent(src||'')}`; return; }
+    v.src = src;
+    v.play().catch(()=>{});
+    return;
+  }
+
+  // Unknown -> fallback to player.html
+  window.location.href = `player.html?title=${encodeURIComponent(movie.title||'')}&video=${encodeURIComponent(src||'')}`;
+}
+
+/* Render movie cards (kept original layout/classes) */
+function renderMovies(moviesToRender) {
+  container.innerHTML = '';
+  moviesToRender.forEach((movie, index) => {
+    const delayClass = `delay-${(index % 5) * 100}`;
+
+    const div = document.createElement('div');
+    div.className = `movie-card animate-fade-in ${delayClass} rounded-xl overflow-hidden bg-gray-800 hover:bg-gray-700 cursor-pointer relative group`;
+    div.innerHTML = `
+      <div class="relative overflow-hidden rounded-t-lg">
+        <img src="${movie.image}" alt="${movie.title}" class="w-full h-full object-cover movie-poster">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+          <button class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded-full transition transform hover:scale-105">
+            <i class="fas fa-play mr-2"></i> Watch Now
+          </button>
+        </div>
+      </div>
+      <div class="p-4">
+        <h3 class="font-semibold text-lg truncate">${movie.title}</h3>
+        <div class="flex justify-between items-center mt-2 text-sm text-gray-400">
+          <span><i class="fas fa-star text-yellow-400 mr-1"></i> 4.5</span>
+          <span>${movie.year || ''}</span>
+        </div>
+      </div>
+    `;
+
+    // NEW: open modal with Hawkeye-style handling for playable sources
+    div.addEventListener('click', () => {
+      // Determine current visible list to allow next/prev (search/category aware)
+      const filtered = getFilteredMovies();
+      const idxInFiltered = filtered.findIndex(m => (m.title === movie.title) && (m.year == movie.year));
+      const playIndex = idxInFiltered >= 0 ? idxInFiltered : index;
+      // If video is likely playable in modal (mp4/hls/youtube/iframe hosts) -> open modal
+      const src = (typeof movie.video === 'object' && movie.video !== null)
+        ? (movie.video.high || movie.video.medium || movie.video.low || Object.values(movie.video)[0])
+        : movie.video || '';
+      const lc = (src || '').toLowerCase();
+      const playableInline = isMP4(src) || isHls(src) || isYouTube(src) ||
+                             lc.includes('streamtape.com') || lc.includes('dood') || lc.includes('ok.ru') ||
+                             lc.includes('mega.nz') || lc.includes('drive.google.com') || lc.includes('vidcdn');
+      if (playableInline) {
+        playInModal(filtered.length ? filtered : movies, playIndex);
+      } else {
+        // fallback to player.html (keeps original behavior for unknown hosts)
+        const url = `player.html?title=${encodeURIComponent(movie.title)}&video=${encodeURIComponent(movie.video)}&index=${index}`;
+        window.location.href = url;
+      }
+    });
+
+    container.appendChild(div);
+  });
+}
+
+/* Simple search & category filtering helpers (kept original behavior) */
+function getFilteredMovies() {
+  const term = (document.getElementById('searchBar').value || '').toLowerCase().trim();
+  const activeTab = document.querySelector('.category-tab.active');
+  const category = activeTab ? activeTab.dataset.category : 'all';
+  let filtered = movies.slice();
+
+  if (category && category !== 'all') {
+    filtered = filtered.filter(m => (m.categories || []).includes(category));
+  }
+  if (term) {
+    filtered = filtered.filter(m => (m.title || '').toLowerCase().includes(term));
+  }
+  return filtered;
+}
+
+/* Event bindings for search & category tabs (preserve exact UI behavior) */
+document.getElementById('searchBar').addEventListener('input', () => {
+  renderMovies(getFilteredMovies());
+});
+document.querySelectorAll('.category-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.category-tab').forEach(x => x.classList.remove('active'));
+    btn.classList.add('active');
+    renderMovies(getFilteredMovies());
+  });
+});
+
+/* Modal close handlers (preserve original button and outside click behavior) */
+modalCloseBtn.addEventListener('click', closeModal);
+videoModal.addEventListener('click', (e) => {
+  if (e.target === videoModal) closeModal();
+});
+
+/* Keyboard shortcuts while modal open */
+document.addEventListener('keydown', (e) => {
+  if (!videoModal.classList.contains('hidden') && !videoModal.classList.contains('hidden') ) {
+    const v = document.getElementById(modalVideoId);
+    switch (e.key) {
+      case 'Escape': closeModal(); break;
+      case ' ': e.preventDefault(); if (v) v.paused ? v.play() : v.pause(); break;
+      case 'ArrowRight': if (v) v.currentTime = Math.max(0, v.currentTime + 10); break;
+      case 'ArrowLeft': if (v) v.currentTime = Math.max(0, v.currentTime - 10); break;
+      case 'f': if (v) { if (!document.fullscreenElement) v.requestFullscreen().catch(()=>{}); else document.exitFullscreen(); } break;
+      case 'm': if (v) { v.muted = !v.muted; } break;
+      case 'n': // next
+        if (currentFiltered && typeof currentIndex === 'number' && currentIndex < currentFiltered.length - 1) playInModal(currentFiltered, currentIndex + 1);
+        break;
+      case 'p': // prev
+        if (currentFiltered && typeof currentIndex === 'number' && currentIndex > 0) playInModal(currentFiltered, currentIndex - 1);
+        break;
+    }
+  }
+});
+
+/* Initial render */
+renderMovies(movies);
+
+/* Expose close to window if external code expects it */
+window.closeModal = closeModal;
+
+
+
+const modalControlsHTML = `
+  <div class="custom-controls">
+    <button id="prevBtn">⏮</button>
+    <button id="playPauseBtn">⏯</button>
+    <button id="nextBtn">⏭</button>
+    <button id="muteBtn">🔇</button>
+    <button id="fullscreenBtn">⛶</button>
+    <button id="closeBtn">✕</button>
+  </div>
+`;
+
+
+
+</script>
+
+  <!-- ========================================= -->
+<!--        ADSTERRA FULL GLOBAL AD BLOCK      -->
+<!-- ========================================= -->
+
+<!-- ===== Banner 300x250 (inside content / under video) ===== -->
+<div id="adsterra-banner-300x250" style="text-align:center; margin:20px 0;">
+  <script type="text/javascript">
+    atOptions = {
+      'key' : '267d846b24a4cdd5fd7ab140783cec90',
+      'format' : 'iframe',
+      'height' : 250,
+      'width' : 300,
+      'params' : {}
+    };
+  </script>
+  <script type="text/javascript" src="//bowlingprosperhalfbrother.com/267d846b24a4cdd5fd7ab140783cec90/invoke.js"></script>
+</div>
+
+
+<!-- ===== Banner 728x90 (header / between content) ===== -->
+<div id="adsterra-banner-728x90" style="text-align:center; margin:20px 0;">
+  <script type="text/javascript">
+    atOptions = {
+      'key' : '5a4dc7c6c5524517e3d815b39b121f28',
+      'format' : 'iframe',
+      'height' : 90,
+      'width' : 728,
+      'params' : {}
+    };
+  </script>
+  <script type="text/javascript" src="https://contentblanksupersede.com/5a4dc7c6c5524517e3d815b39b121f28/invoke.js"></script>
+</div>
+
+
+<!-- ===== Social Bar (Site A) ===== -->
+<script type="text/javascript" src="//bowlingprosperhalfbrother.com/42/5b/58/425b58e61b66997ed4519d91d1f2dcf4.js"></script>
+
+<!-- ===== Social Bar (Site B) ===== -->
+<script type="text/javascript" src="https://contentblanksupersede.com/56/5e/44/565e44d5eee19958a58343407baab82d.js"></script>
+
+
+<!-- ===== PopUnder (Site A) – keep near </body> ===== -->
+<script type="text/javascript" src="//bowlingprosperhalfbrother.com/2d/95/e8/2d95e8d5c6532307745afa9b1be1162b.js"></script>
+
+<!-- ===== PopUnder (Site B) – keep LAST ===== -->
+<script src="https://contentblanksupersede.com/56/61/c1/5661c15aebfd7d940105d7c42e76b1cc.js"></script>
+
+<!-- ========================================= -->
+<!--           END ADSTERRA BLOCK              -->
+<!-- ========================================= -->
+
+
+</body>
+</html>
