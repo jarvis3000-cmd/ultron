@@ -183,7 +183,107 @@ html {
 </style>
 </head>
 <body class="bg-gray-50 min-h-screen transition-colors duration-200">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <!-- ☰ MENU BUTTON -->
+<div class="menu-btn" onclick="toggleMenu()">☰</div>
+
+<div class="overlay" onclick="toggleMenu()"></div>
+
+<div class="sidebar" id="sidebar">
+
+  <!-- Main Links -->
+  <a href="https://ultron3000.github.io/ultron">Home</a>
+  <a href="https://swarajya.site/chhatrapati-shivaji-maharaj">स्वराज्य</a>
+  <a href="https://ultron3000.github.io/ultron/marathi-movies">Marathi Movies</a>
+  <a href="https://ultron3000.github.io/ultron/hindi-movies">Hindi Movies</a>
+
+  <!-- Animation Studios -->
+  <div class="menu-item" onclick="toggleSub('animationSub')">
+    🎨 Animation Studios ▾
+  </div>
+  <div class="submenu" id="animationSub">
+    <a href="https://ultron3000.github.io/ultron/pixar-animation">Pixar</a>
+    <a href="https://ultron3000.github.io/ultron/dreamworks-animation">DreamWorks</a>
+    <a href="https://ultron3000.github.io/ultron/sony-animation">Sony Animation</a>
+    <a href="https://ultron3000.github.io/ultron/illumination-animation">Illumination</a>
+    <a href="https://ultron3000.github.io/ultron/disney-animation">Disney</a>
+    <a href="https://ultron3000.github.io/ultron/other-animation">Other Studios</a>
+  </div>
+
+  <!-- Sequels -->
+  <div class="menu-item" onclick="toggleSub('sequelsSub')">
+    🔁 Sequels ▾
+  </div>
+  <div class="submenu" id="sequelsSub">
+    <a href="https://ultron3000.github.io/sequels/animation-sequels">Animation Sequels</a>
+    <a href="https://ultron3000.github.io/sequels/english-movie-sequels">Movie Sequels</a>
+  </div>
+
+  <!-- Web Series -->
+  <div class="menu-item" onclick="toggleSub('seriesSub')">
+    📺 Web Series ▾
+  </div>
+  <div class="submenu" id="seriesSub">
+    <a href="https://ultron3000.github.io/series/animated-series">Animated Series</a>
+    <a href="https://ultron3000.github.io/series/english-series">English Series</a>
+    <a href="https://ultron3000.github.io/series/hindi-series">Hindi Series</a>
+  </div>
+
+ <!-- Studios & Franchises -->
+<div class="menu-item" onclick="toggleSub('studiosSub')">
+  🎬 Studios & Franchises ▾
+</div>
+
+<div class="submenu" id="studiosSub">
+  <a href="https://ultron3000.github.io/ultron/marvel">Marvel Studios</a>
+  <a href="https://ultron3000.github.io/ultron/wb">Warner Bros Pictures</a>
+  <a href="https://ultron3000.github.io/ultron/x-men">X-MEN</a>
+  <a href="https://ultron3000.github.io/ultron/wick">John Wick</a>
+  <a href="https://ultron3000.github.io/ultron/rambo">Rambo</a>
+  <a href="https://ultron3000.github.io/ultron/f-f">Fast & Furious</a>
+  <a href="https://ultron3000.github.io/ultron/transformers">Transformers</a>
+  <a href="https://ultron3000.github.io/ultron/bourne">Jason Bourne</a>
+  <a href="https://ultron3000.github.io/ultron/terminator">Terminator</a>
+  <a href="https://ultron3000.github.io/ultron/fd">Final Destination</a>
+  <a href="https://ultron3000.github.io/ultron/predator">Predator</a>
+  <a href="https://ultron3000.github.io/ultron/evil">Resident Evil</a>
+  <a href="https://ultron3000.github.io/ultron/mi">Mission Impossible</a>
+  <a href="https://ultron3000.github.io/ultron/007">007 (James Bond)</a>
+  <a href="https://ultron3000.github.io/ultron/rocky">Rocky Balboa</a>
+  <a href="https://ultron3000.github.io/ultron/sniper">Sniper</a>
+  <a href="https://ultron3000.github.io/ultron/vampire">Vampire</a>
+</div>
+
+<!-- Live TV -->
+<div class="menu-item" onclick="toggleSub('liveSub')">
+  📡 Live TV ▾
+</div>
+<div class="submenu" id="liveSub">
+  <a href="https://ultron3000.github.io/ultron/tv">Live TV</a>
+  <a href="https://ultron3000.infinityfree.me/channels1.html">All Channels</a>
+  <a href="https://ultron3000.infinityfree.me/channels.html">Sports Channels</a>
+  <a href="https://tv.garden">Global TV</a>
+  <a href="https://radio.garden">Global Radio</a>
+</div>
+
+<!-- Cartoons -->
+<div class="menu-item" onclick="toggleSub('cartoonSub')">
+  🧸 Cartoons ▾
+</div>
+<div class="submenu" id="cartoonSub">
+  <a href="https://ultron3000.github.io/ultron/swat-kats">
+    SWAT Kats
+  </a>
+  <a href="https://ultron3000.github.io/ultron/he-man">
+    He-Man
+  </a>
+</div>
+
+  <!-- Network Stream -->
+  <a href="https://ultron3000.github.io/ultron/network-stream">
+    🌐 Network Stream
+  </a>
+
+</div>
 
 
   
@@ -259,6 +359,7 @@ html {
   </div>
 </nav>
 
+
 <style>
   body.dark {
     background-color: #111827;
@@ -268,6 +369,77 @@ html {
   .dark-mode-toggle i {
     transition: transform 0.3s;
   }
+  /* ===== SIDEBAR MENU ===== */
+
+.menu-btn {
+  position: fixed;
+  top: 80px;   /* ⬅ increase this */
+  left: 15px;
+  font-size: 26px;
+  cursor: pointer;
+  z-index: 9999;
+  background: rgba(0,0,0,0.7);
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: #fff;
+}
+
+.sidebar {
+  position: fixed;
+  top: 100px;       /* 👈 match your header height */
+  left: -280px;
+  width: 260px;
+  height: calc(100% - 100px);  /* 👈 important */
+  background: #111;
+  padding-top: 20px;
+  transition: 0.3s ease;
+  overflow-y: auto;
+  z-index: 9998;
+}
+
+.sidebar a,
+.menu-item {
+  display: block;
+  padding: 12px 20px;
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.sidebar a:hover,
+.menu-item:hover {
+  background: #1f1f1f;
+}
+
+.submenu {
+  display: none;
+  background: #1a1a1a;
+}
+
+.submenu a {
+  padding-left: 35px;
+  font-size: 14px;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  z-index: 9997;
+}
+
+.sidebar.active {
+  left: 0;
+}
+
+.overlay.active {
+  display: block;
+}
 </style>
 
 <script>
@@ -371,7 +543,7 @@ html {
       </a>
     </div>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-      <a href="https://ultron3000.infinityfree.me/chhatrapati-shivaji-maharaj.html" class="category-card bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+      <a href="https://ultron3000.github.io/ultron/chhatrapati-shivaji-maharaj" class="category-card bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
         <div class="h-28 sm:h-32 md:h-36 lg:h-40 overflow-hidden relative">
           <img src="https://voteforshivajijayanti.com/wp-content/uploads/2024/07/Chhatrapati-Shivaji-Maharaj-12.jpg" 
                alt="Marathi Movies" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
@@ -381,7 +553,7 @@ html {
           </div>
         </div>
       </a>
-      <a href="https://ultron3000.infinityfree.me/marathi-movies.html" class="category-card bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+      <a href="https://ultron3000.github.io/ultron/marathi-movies" class="category-card bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
         <div class="h-28 sm:h-32 md:h-36 lg:h-40 overflow-hidden relative">
           <img src="https://i.pinimg.com/736x/94/d2/a2/94d2a2f1e880cf47aca8c0942ac1107e.jpg" 
                alt="Marathi Series" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
@@ -391,7 +563,7 @@ html {
           </div>
         </div>
       </a>
-      <a href="https://ultron3000.infinityfree.me/savarkar.html" class="category-card bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+      <a href="https://ultron3000.github.io/ultron/savarkar" class="category-card bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
         <div class="h-28 sm:h-32 md:h-36 lg:h-40 overflow-hidden relative">
           <img src="https://www.samvad.in/Encyc/2024/5/27/Vinayak_Damodar_Savarkar_image_202405271344335361_H@@IGHT_540_W@@IDTH_650.jpg" 
                alt="स्वातंत्र्यवीर सावरकर" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
@@ -401,9 +573,9 @@ html {
           </div>
         </div>
       </a>
-      <a href="https://ultron3000.infinityfree.me/hindi-movies.html" class="category-card bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+      <a href="https://ultron3000.github.io/ultron/hindi-movies" class="category-card bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
         <div class="h-28 sm:h-32 md:h-36 lg:h-40 overflow-hidden relative">
-          <img src="https://media.istockphoto.com/id/1253945862/vector/sale2.jpg?s=612x612&w=0&k=20&c=VTvCdHZZXQJjtMKvAMU0x7bdoQAhnIYkvFft4Af2aUM=" 
+          <img src="https://dcassetcdn.com/design_img/3042968/32641/32641_16877922_3042968_f6a63659_image.jpg" 
                alt="Marathi Music" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
           <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
           <div class="absolute bottom-0 left-0 right-0 p-2 sm:p-3 z-10">
@@ -427,7 +599,7 @@ html {
     <div class="relative">
       <div class="overflow-x-auto scrollbar-hide pb-4 -mx-2 sm:mx-0 px-2 sm:px-0">
         <div class="flex space-x-3 sm:space-x-4" style="width: max-content;">
-          <a href="https://ultron3000.infinityfree.me/disney-animation.html" class="category-card w-40 sm:w-48 bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex-shrink-0">
+          <a href="https://ultron3000.github.io/ultron/disney-animation" class="category-card w-40 sm:w-48 bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex-shrink-0">
             <div class="h-24 sm:h-28 overflow-hidden relative">
               <img src="https://i.pinimg.com/736x/a3/69/18/a36918b35d16f0648adee6bead60e7b4.jpg" 
                    alt="Disney Animation" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
@@ -437,7 +609,7 @@ html {
               <h3 class="font-medium text-sm">Disney Animation</h3>
             </div>
           </a>
-          <a href="https://ultron3000.infinityfree.me/pixar-animation.html" class="category-card w-40 sm:w-48 bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex-shrink-0">
+          <a href="https://ultron3000.github.io/ultron/pixar-animation" class="category-card w-40 sm:w-48 bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex-shrink-0">
             <div class="h-24 sm:h-28 overflow-hidden relative">
               <img src="https://brandwiki.ru/up/brands/product/190605_8574.webp" 
                    alt="Pixar" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
@@ -447,7 +619,7 @@ html {
               <h3 class="font-medium text-sm">Pixar</h3>
             </div>
           </a>
-          <a href="https://ultron3000.infinityfree.me/dreamworks-animation.html" class="category-card w-40 sm:w-48 bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex-shrink-0">
+          <a href="https://ultron3000.github.io/ultron/dreamworks-animation" class="category-card w-40 sm:w-48 bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex-shrink-0">
             <div class="h-24 sm:h-28 overflow-hidden relative">
               <img src="https://images.thedirect.com/media/article_full/dreamworks-animation.jpg" 
                    alt="DreamWorks" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
@@ -457,7 +629,7 @@ html {
               <h3 class="font-medium text-sm">DreamWorks</h3>
             </div>
           </a>
-          <a href="https://ultron3000.infinityfree.me/sony-animation.html" class="category-card w-40 sm:w-48 bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex-shrink-0">
+          <a href="https://ultron3000.github.io/ultron/sony-animation" class="category-card w-40 sm:w-48 bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex-shrink-0">
             <div class="h-24 sm:h-28 overflow-hidden relative">
               <img src="https://i.redd.it/gw1ia30l57991.jpg" 
                    alt="Sony Animation" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
@@ -467,7 +639,7 @@ html {
               <h3 class="font-medium text-sm">Sony Animation</h3>
             </div>
           </a>
-          <a href="https://ultron3000.infinityfree.me/illumination-animation.html" class="category-card w-40 sm:w-48 bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex-shrink-0">
+          <a href="https://ultron3000.github.io/ultron/illumination-animation" class="category-card w-40 sm:w-48 bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex-shrink-0">
             <div class="h-24 sm:h-28 overflow-hidden relative">
               <img src="https://i.ytimg.com/vi/_4A8XlGuJPY/maxresdefault.jpg" 
                    alt="Illumination" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
@@ -475,16 +647,6 @@ html {
             </div>
             <div class="p-2 sm:p-3">
               <h3 class="font-medium text-sm">Illumination</h3>
-            </div>
-          </a>
-          <a href="https://ultron3000.infinityfree.me/other-animation.html" class="category-card w-40 sm:w-48 bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex-shrink-0">
-            <div class="h-24 sm:h-28 overflow-hidden relative">
-              <img src="https://m.media-amazon.com/images/I/91YBo1kBEdL.jpg" 
-                   alt="Illumination" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
-              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-            </div>
-            <div class="p-2 sm:p-3">
-              <h3 class="font-medium text-sm">Other Studios</h3>
             </div>
           </a>
         </div>
@@ -1713,7 +1875,7 @@ html {
     <div class="relative">
       <div class="overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
         <div class="flex space-x-4" style="width: max-content;">
-         <a href="https://ultron3000.infinityfree.me/marvel.html" class="category-card w-40 sm:w-48 bg-white rounded-xl overflow-hidden shadow-sm cursor-pointer flex-shrink-0">
+         <a href="https://ultron3000.github.io/ultron/marvel" class="category-card w-40 sm:w-48 bg-white rounded-xl overflow-hidden shadow-sm cursor-pointer flex-shrink-0">
             <div class="h-24 sm:h-28 overflow-hidden relative">
               <img src="https://miro.medium.com/v2/resize:fit:1400/1*hCX3hiUjYMuDnby43KtQpg.jpeg" alt="Marvel Studios" class="w-full h-full object-cover">
             </div>
@@ -1726,7 +1888,7 @@ html {
               </div>
             </div>
           </a>
-          <a href="https://ultron3000.infinityfree.me/wb.html" class="category-card w-40 sm:w-48 bg-white rounded-xl overflow-hidden shadow-sm cursor-pointer flex-shrink-0">
+          <a href="https://ultron3000.github.io/ultron/wb" class="category-card w-40 sm:w-48 bg-white rounded-xl overflow-hidden shadow-sm cursor-pointer flex-shrink-0">
             <div class="h-24 sm:h-28 overflow-hidden relative">
               <img src="https://www.warnerbros.com/assets/images/blue-wb-shield-500x480.png" alt="Warner Bros Pictures" class="w-full h-full object-cover">
             </div>
@@ -2781,7 +2943,7 @@ html {
       </div>
     </div>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-      <a href="https://ultron3000.infinityfree.me/live-tv.html" class="global-media-card bg-white rounded-xl overflow-hidden shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+      <a href="https://ultron3000.github.io/ultron/tv" class="global-media-card bg-white rounded-xl overflow-hidden shadow-sm cursor-pointer hover:shadow-md transition-shadow">
         <div class="h-24 sm:h-28 overflow-hidden relative">
           <img src="https://img.freepik.com/premium-vector/tv-television-logo-live-streaming-design_332533-53.jpg?semt=ais_hybrid&w=740&q=80" alt="Live TV" class="w-full h-full object-cover">
           <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
@@ -2795,31 +2957,31 @@ html {
           </div>
         </div>
       </a>
-      <a href="https://jarvis3000-cmd.github.io/star/" class="global-media-card bg-white rounded-xl overflow-hidden shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+      <a href="https://ultron3000.infinityfree.me/channels1.html" class="global-media-card bg-white rounded-xl overflow-hidden shadow-sm cursor-pointer hover:shadow-md transition-shadow">
         <div class="h-24 sm:h-28 overflow-hidden relative">
           <img src="https://img.freepik.com/premium-vector/cricket-ball-thunder-vector-logo-design-cricket-club-vector-logo-with-lightning-bolt-design_617472-2283.jpg?semt=ais_hybrid&w=740&q=80" alt="Radio" class="w-full h-full object-cover">
           <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
           <div class="absolute top-2 right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded">LIVE</div>
         </div>
         <div class="p-3">
-          <h3 class="font-medium text-sm">Star Channels</h3>
+          <h3 class="font-medium text-sm">All Channels</h3>
           <div class="flex items-center mt-1">
             <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-            <span class="text-xs text-gray-500 ml-1.5">856K listening</span>
+            <span class="text-xs text-gray-500 ml-1.5">1M watching</span>
           </div>
         </div>
-      </a>   
-      <a href="https://jarvis3000-cmd.github.io/sony/" class="global-media-card bg-white rounded-xl overflow-hidden shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+      </a>
+      <a href="https://ultron3000.infinityfree.me/channels.html" class="global-media-card bg-white rounded-xl overflow-hidden shadow-sm cursor-pointer hover:shadow-md transition-shadow">
         <div class="h-24 sm:h-28 overflow-hidden relative">
-          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCujqZrgUn2xXdManuX_GEJvpSN12LZCtNKw&s" alt="Radio" class="w-full h-full object-cover">
+          <img src="https://marketplace.canva.com/EAFpgtLOm7E/2/0/1131w/canva-blue-green-illustration-sports-channel-poster-k5X589REXgY.jpg" alt="Radio" class="w-full h-full object-cover">
           <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
           <div class="absolute top-2 right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded">LIVE</div>
         </div>
         <div class="p-3">
-          <h3 class="font-medium text-sm">Sony Channels</h3>
+          <h3 class="font-medium text-sm">Sports Channels</h3>
           <div class="flex items-center mt-1">
             <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-            <span class="text-xs text-gray-500 ml-1.5">856K listening</span>
+            <span class="text-xs text-gray-500 ml-1.5">856K Watching</span>
           </div>
         </div>
       </a>
@@ -3139,6 +3301,21 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
+
+
+ <script>
+function toggleMenu() {
+  document.getElementById("sidebar").classList.toggle("active");
+  document.querySelector(".overlay").classList.toggle("active");
+}
+
+function toggleSub(id) {
+  const sub = document.getElementById(id);
+  sub.style.display =
+    sub.style.display === "block" ? "none" : "block";
+}
+</script>
+
 <!-- ========================================= -->
 <!--        ADSTERRA FULL GLOBAL AD BLOCK      -->
 <!-- ========================================= -->
@@ -3189,9 +3366,6 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- ========================================= -->
 <!--           END ADSTERRA BLOCK              -->
 <!-- ========================================= -->
-
-
- 
 
 
 </body>
