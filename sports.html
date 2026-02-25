@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cloud TV</title>
+
+<link rel="icon" href="https://static.readdy.ai/image/0ece273271e400e488b9947cb1e99e9a/a79b6f32c71c4ee2094ead0eb9c84c9b.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
+
+<style>
+:root{
+  --bg:#050509;
+  --card:#0d0d16;
+  --border:rgba(255,255,255,.08);
+  --accent:#ffeb3b;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,sans-serif;
+  background:var(--bg);
+  color:#fff;
+}
+
+/* HEADER */
+header{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:14px 18px;
+  background:#07070c;
+  border-bottom:1px solid var(--border);
+}
+header img{height:40px}
+header span{font-size:20px;font-weight:700}
+
+/* GRID */
+.grid{
+  display:grid;
+  gap:16px;
+  padding:16px;
+}
+@media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:601px){.grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}}
+
+/* CARD */
+.card{
+  background:var(--card);
+  border-radius:18px;
+  border:1px solid var(--border);
+  cursor:pointer;
+  text-align:center;
+  padding:18px 10px;
+  transition:.25s;
+}
+.card:hover{
+  transform:translateY(-5px);
+  border-color:var(--accent);
+}
+.card img{
+  width:90px;
+  height:90px;
+  object-fit:contain;
+  margin-bottom:10px;
+}
+
+/* MODAL */
+#playerModal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:#000;
+  z-index:9999;
+}
+#playerFrame{
+  width:100%;
+  height:calc(100% - 80px);
+  border:none;
+}
+#closeBtn{
+  position:absolute;
+  top:10px;
+  right:10px;
+  z-index:10000;
+  background:#000;
+  color:#fff;
+  border:none;
+  font-size:22px;
+  cursor:pointer;
+}
+
+/* CONTROLS */
+#controls{
+  height:80px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  background:#07070c;
+  border-top:1px solid var(--border);
+}
+.btn{
+  background:#111;
+  color:#fff;
+  border:1px solid var(--border);
+  padding:10px 14px;
+  border-radius:10px;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <a href="https://ultron3000.github.io/ultron" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:8px;">
+    <img 
+      src="https://static.readdy.ai/image/0ece273271e400e488b9947cb1e99e9a/a79b6f32c71c4ee2094ead0eb9c84c9b.png"
+      alt="Cloud TV Logo"
+      style="cursor:pointer;"
+    >
+    <span>Cloud TV</span>
+  </a>
+</header>
+
+<div class="grid" id="grid"></div>
+
+<!-- PLAYER MODAL -->
+<div id="playerModal">
+  <button id="closeBtn" onclick="closePlayer()">✕</button>
+
+  <iframe
+    id="playerFrame"
+    allow="autoplay; encrypted-media; fullscreen; picture-in-picture">
+  </iframe>
+
+  <div id="controls">
+    <button id="prevBtn" class="btn"><i class="fas fa-step-backward"></i></button>
+    <button id="playPauseBtn" class="btn"><i class="fas fa-play"></i></button>
+    <button id="nextBtn" class="btn"><i class="fas fa-step-forward"></i></button>
+    <button id="fullscreenBtn" class="btn"><i class="fas fa-expand"></i></button>
+    <button id="muteBtn" class="btn"><i class="fas fa-volume-up"></i></button>
+    <button id="closeCtrlBtn" class="btn"><i class="fas fa-times"></i></button>
+  </div>
+</div>
+
+<script>
+let allChannels=[];
+let currentIndex=0;
+let currentList=[];
+
+fetch('channels.json')
+.then(r=>r.json())
+.then(data=>{
+  allChannels=data;
+  currentList=data;
+  render(data);
+});
+
+function render(list){
+  const grid=document.getElementById('grid');
+  grid.innerHTML='';
+  list.forEach((ch,i)=>{
+    const c=document.createElement('div');
+    c.className='card';
+    c.innerHTML=`
+      <img src="${ch.logo}" onerror="this.src='https://via.placeholder.com/90?text=No+Logo'">
+      <div>${ch.id}</div>
+    `;
+    c.onclick=()=>openPlayer(i);
+    grid.appendChild(c);
+  });
+}
+
+function openPlayer(index){
+  currentIndex=index;
+  const ch=currentList[index];
+  document.getElementById('playerModal').style.display='block';
+  document.getElementById('playerFrame').src=ch.m3u8 || ch.mpd;
+}
+
+function closePlayer(){
+  document.getElementById('playerFrame').src='';
+  document.getElementById('playerModal').style.display='none';
+}
+
+/* CONTROLS */
+function getVideo(){
+  const frame=document.getElementById('playerFrame');
+  return frame.contentWindow?.document.querySelector('video');
+}
+
+document.getElementById('playPauseBtn').onclick=()=>{
+  const v=getVideo();
+  if(!v)return;
+  v.paused?v.play():v.pause();
+};
+
+document.getElementById('muteBtn').onclick=()=>{
+  const v=getVideo();
+  if(!v)return;
+  v.muted=!v.muted;
+};
+
+document.getElementById('fullscreenBtn').onclick=()=>{
+  const v=getVideo();
+  if(v?.requestFullscreen)v.requestFullscreen();
+};
+
+document.getElementById('prevBtn').onclick=()=>{
+  if(currentIndex>0)openPlayer(currentIndex-1);
+};
+
+document.getElementById('nextBtn').onclick=()=>{
+  if(currentIndex<currentList.length-1)
+  openPlayer(currentIndex+1);
+};
+
+document.getElementById('closeCtrlBtn').onclick=()=>{
+  closePlayer();
+};
+</script>
+<!-- ========================================= -->
+<!--        ADSTERRA FULL GLOBAL AD BLOCK      -->
+<!-- ========================================= -->
+
+<!-- ===== Banner 300x250 (inside content / under video) ===== -->
+<div id="adsterra-banner-300x250" style="text-align:center; margin:20px 0;">
+  <script type="text/javascript">
+    atOptions = {
+      'key' : '267d846b24a4cdd5fd7ab140783cec90',
+      'format' : 'iframe',
+      'height' : 250,
+      'width' : 300,
+      'params' : {}
+    };
+  </script>
+  <script type="text/javascript" src="//bowlingprosperhalfbrother.com/267d846b24a4cdd5fd7ab140783cec90/invoke.js"></script>
+</div>
+
+
+<!-- ===== Banner 728x90 (header / between content) ===== -->
+<div id="adsterra-banner-728x90" style="text-align:center; margin:20px 0;">
+  <script type="text/javascript">
+    atOptions = {
+      'key' : '5a4dc7c6c5524517e3d815b39b121f28',
+      'format' : 'iframe',
+      'height' : 90,
+      'width' : 728,
+      'params' : {}
+    };
+  </script>
+  <script type="text/javascript" src="https://contentblanksupersede.com/5a4dc7c6c5524517e3d815b39b121f28/invoke.js"></script>
+</div>
+
+
+<!-- ===== Social Bar (Site A) ===== -->
+<script type="text/javascript" src="//bowlingprosperhalfbrother.com/42/5b/58/425b58e61b66997ed4519d91d1f2dcf4.js"></script>
+
+<!-- ===== Social Bar (Site B) ===== -->
+<script type="text/javascript" src="https://contentblanksupersede.com/56/5e/44/565e44d5eee19958a58343407baab82d.js"></script>
+
+
+<!-- ===== PopUnder (Site A) – keep near </body> ===== -->
+<script type="text/javascript" src="//bowlingprosperhalfbrother.com/2d/95/e8/2d95e8d5c6532307745afa9b1be1162b.js"></script>
+
+<!-- ===== PopUnder (Site B) – keep LAST ===== -->
+<script src="https://contentblanksupersede.com/56/61/c1/5661c15aebfd7d940105d7c42e76b1cc.js"></script>
+
+<!-- ========================================= -->
+<!--           END ADSTERRA BLOCK              -->
+<!-- ========================================= -->
+
+</body>
+</html>
