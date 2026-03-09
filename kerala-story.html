@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>Misdirection
+<title>The Kerala Story
 </title>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -387,7 +387,7 @@ iframe:-webkit-full-screen {
 <div class="relative w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] overflow-hidden">
   <!-- YouTube Video Background -->
   <iframe 
-    src="https://www.youtube.com/embed/I0kRT5wr1Jk?autoplay=1&mute=1&loop=1&playlist=lJvxW4V9wYc&controls=0&modestbranding=1"
+    src="https://www.youtube.com/embed/j0_038C5RRk?autoplay=1&mute=1&loop=1&playlist=j0_038C5RRk&controls=0&modestbranding=1"
     frameborder="0" 
     allow="autoplay; fullscreen" 
     class="absolute top-0 left-0 w-full h-full pointer-events-none">
@@ -395,7 +395,7 @@ iframe:-webkit-full-screen {
 
   <!-- Animated Logo at Top-Left -->
   <img 
-    src="https://filmcombatsyndicate.com/wp-content/uploads/2026/01/wp-17682454075564783993532352997505-1024x576-1024x585.jpg" 
+    src="https://media.assettype.com/nationalherald%2F2026-02-24%2F9cmadv30%2FKerala-Story-2.jpg?rect=0%2C0%2C900%2C506&auto=format%2Ccompress&fmt=webp&w=1200" 
     alt="Transformers Logo" 
     class="absolute top-2 left-2 sm:top-4 sm:left-4 h-10 sm:h-16 md:h-20 lg:h-24 animate-logo z-10"
   />
@@ -472,14 +472,9 @@ iframe:-webkit-full-screen {
      * Existing movies array (unchanged)
      ******************************/
     const movies = [
- { 
-        title: "Misdirection", 
-        video: "https://spc.aurorionventures.space:443/v4/36/yoglci/index-f2-v1-a1.txt", 
-        image: "https://image.tmdb.org/t/p/w500/tDPW2j6L6r6YfsChYLfLRQ6Vjwh.jpg",
-        year: 2026,
-        duration: "160 min",
-        description: "A couple's trust is tested on their last big job, as their victim reveals a hidden agenda resulting in murder."
-      },
+{ title: "The Kerala Story", video: "https://main-mp4.randomrainever.workers.dev/mp4/RjkzWW9pUE5kSnovZmRRS3N0TlpYdz09OldENndZVEVqanRwOXRwUERrdkYyUmMvMmwxelNGUXlwKzlXMURSd0Q3ZkYvOGVxWmdjQmVrN2tXbWdicXNLdko0azZ5V0gydXRxSHNIT2pHUmgrSTRHWDRMMlhtUG5Sd2dONDdaNVMxN21TdWFPa013bUtYRm5mbGdsclRUclZ6TnQ4MTREQ1RvSVNqbFNoRjlMYlJkcTBpYStpVytXQkxCaVlMN3NZbGtOUVRaMzl6SGZ0MVROQlVCQnZnMUw0N3UyWmRENGE5Q3I0Y01rTjY0cXV3YWZDRXJhV2I3QjlTZlBic1NPMWcwc1hObzVWdlMzWmRUZE10SkZaZVRBRVlNR05ieklYSW1DRHovUjMvZ3FwdjdRPT0=", image: "https://image.tmdb.org/t/p/w500/g70f3hwn5jPaNzqPssoa9unlawo.jpg", category: "other", year: 2023 },
+            { title: "The Kerala Story 2 Goes Beyond", video: "https://lizer123.site:443/stream/bTN1OC80MS85ODY4ZGU3ZDE1YmFlMzgxNjY1M2FhOWZhZDZjZjEwNi8xMDgwcC8xMDgwcC5tM3U4P2lkPQ==", image: "https://image.tmdb.org/t/p/w500/97jAFQcAnspd416cupbAbGMNT9z.jpg", category: "other", year: 2026 },
+            
       
     ];
 
@@ -632,6 +627,55 @@ iframe:-webkit-full-screen {
         }
         return;
       }
+
+       // FORCE Workers MP4 streams to use HTML5 video
+if (src.includes('workers.dev/mp4')) {
+  const v = document.getElementById(modalVideoId);
+  if (!v) { 
+    showError('Video element missing'); 
+    return; 
+  }
+
+  v.src = src;
+  v.setAttribute("playsinline", "");
+  v.setAttribute("webkit-playsinline", "");
+
+  v.load();
+  v.play().catch(() => {});
+
+  playPauseBtn.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause';
+  return;
+}
+
+      // FORCE lizer123 /stream/ links to use HLS
+if (src.includes('lizer123.site') && src.includes('/stream/')) {
+
+  const v = document.getElementById(modalVideoId);
+  if (!v) { showError('Video element missing'); return; }
+
+  if (currentHls) {
+    currentHls.destroy();
+    currentHls = null;
+  }
+
+  if (Hls.isSupported()) {
+    currentHls = new Hls();
+    currentHls.loadSource(src);
+    currentHls.attachMedia(v);
+    currentHls.on(Hls.Events.MANIFEST_PARSED, function () {
+      v.play().catch(()=>{});
+    });
+  } 
+  else if (v.canPlayType('application/vnd.apple.mpegurl')) {
+    v.src = src;
+    v.load();
+    v.play().catch(()=>{});
+  }
+
+  playPauseBtn.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause';
+  return;
+}
+
 
       // MP4
       if (isMP4(src)) {
@@ -919,6 +963,7 @@ iframe:-webkit-full-screen {
 <!-- ========================================= -->
 <!--           END ADSTERRA BLOCK              -->
 <!-- ========================================= -->
+
 
     
 </body>
