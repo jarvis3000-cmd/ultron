@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>Shelter</title>
+<title>The Kerala Story
+</title>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
@@ -142,21 +143,6 @@
       display: flex;
       flex-direction: column;
     }
-    
-    @media (max-width: 640px) {
-      .modal-card {
-        max-height: 100vh;
-      }
-      .player-meta {
-        padding: 8px;
-      }
-      .player-meta h3 {
-        font-size: 1rem;
-      }
-      .player-meta p {
-        font-size: 0.8rem;
-      }
-    }
     .player-wrapper { 
       position: relative;
       flex: 1;
@@ -232,17 +218,26 @@
       background: transparent;
       border: 1px solid var(--primary);
       color: var(--primary);
-      padding: 10px 14px;
-      border-radius: 8px;
+      padding: 6px 8px;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 0.9rem;
-      min-width: 60px;
+      font-size: 0.8rem;
+      min-width: 40px;
       flex: 1;
       text-align: center;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 4px;
+    }
+    @media (min-width: 768px) {
+      .btn {
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        min-width: 60px;
+        gap: 6px;
+      }
     }
     .btn:hover { 
       background: rgba(254,209,65,0.06); 
@@ -299,7 +294,7 @@
       }
     }
 
-   /* Modal legacy styles (unused) */
+    /* Modal legacy styles (unused) */
     .modal-overlay { display:none; }
     /* ============================
    DESKTOP FIX — DOES NOT TOUCH MOBILE
@@ -352,6 +347,7 @@
     overflow: visible !important;
   }
 }
+
 /* === SMART FULLSCREEN VIDEO FIX (NO CROPPING, NO GAPS WHEN POSSIBLE) === */
 video:fullscreen,
 video:-webkit-full-screen,
@@ -385,13 +381,13 @@ iframe:-webkit-full-screen {
 <div class="stars"></div>
 <div class="stars2"></div>
 </div>
-<div class="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-7xl">
+<div class="container mx-auto px-4 py-8 max-w-7xl">
 
 <!-- Full-Width Video Header with Animated Logo -->
-<div class="relative w-full h-[280px] sm:h-[350px] md:h-[500px] overflow-hidden">
+<div class="relative w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] overflow-hidden">
   <!-- YouTube Video Background -->
   <iframe 
-    src="https://www.youtube.com/embed/PPMawzJxKF4?autoplay=1&mute=1&loop=1&playlist=PPMawzJxKF4&controls=0&modestbranding=1"
+    src="https://www.youtube.com/embed/AFuE1LRxm80?autoplay=1&mute=1&loop=1&playlist=AFuE1LRxm80&controls=0&modestbranding=1"
     frameborder="0" 
     allow="autoplay; fullscreen" 
     class="absolute top-0 left-0 w-full h-full pointer-events-none">
@@ -399,9 +395,9 @@ iframe:-webkit-full-screen {
 
   <!-- Animated Logo at Top-Left -->
   <img 
-    src="https://cdn.district.in/movies-assets/images/cinema/Shelter_Cover-b9884ac0-d0f4-11f0-8c45-91544c4c96a8.jpg" 
-    alt="Despicable Me Logo" 
-    class="absolute top-4 left-4 h-16 md:h-24 animate-logo z-10"
+    src="https://i.ytimg.com/vi/P72AF1ffr5s/maxresdefault.jpg" 
+    alt="Transformers Logo" 
+    class="absolute top-2 left-2 sm:top-4 sm:left-4 h-10 sm:h-16 md:h-20 lg:h-24 animate-logo z-10"
   />
 </div>
 
@@ -432,7 +428,7 @@ iframe:-webkit-full-screen {
 </div>
 <!-- Movies Grid -->
 <div class="mb-12">
-<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6" id="movies"></div>
+<div class="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-6" id="movies"></div>
 </div>
 <!-- Footer / Social -->
   <div class="border-t border-gray-800 mt-6 sm:mt-8 pt-4 sm:pt-6 text-center text-gray-500">
@@ -476,8 +472,9 @@ iframe:-webkit-full-screen {
      * Existing movies array (unchanged)
      ******************************/
     const movies = [
-      { title: "Shelter", video: "https://soq.oakfieldwellnesscollect.sbs:443/v4/sc/dbjovl/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/klvZs66SG19qmacdwxSRkdFQhQS.jpg", category: "feature", year: 2026 },
-     
+            { title: "War Machine ", video: "https://s6mb.fitnesslifestore.shop:443/v4/m9/wkn6fr/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/rFhKkXhk7ClU03jQ5rHIApJDwev.jpg", category: "other", year: 2026 },
+            
+      
     ];
 
     /******************************
@@ -630,6 +627,55 @@ iframe:-webkit-full-screen {
         return;
       }
 
+       // FORCE Workers MP4 streams to use HTML5 video
+if (src.includes('workers.dev/mp4')) {
+  const v = document.getElementById(modalVideoId);
+  if (!v) { 
+    showError('Video element missing'); 
+    return; 
+  }
+
+  v.src = src;
+  v.setAttribute("playsinline", "");
+  v.setAttribute("webkit-playsinline", "");
+
+  v.load();
+  v.play().catch(() => {});
+
+  playPauseBtn.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause';
+  return;
+}
+
+      // FORCE lizer123 /stream/ links to use HLS
+if (src.includes('lizer123.site') && src.includes('/stream/')) {
+
+  const v = document.getElementById(modalVideoId);
+  if (!v) { showError('Video element missing'); return; }
+
+  if (currentHls) {
+    currentHls.destroy();
+    currentHls = null;
+  }
+
+  if (Hls.isSupported()) {
+    currentHls = new Hls();
+    currentHls.loadSource(src);
+    currentHls.attachMedia(v);
+    currentHls.on(Hls.Events.MANIFEST_PARSED, function () {
+      v.play().catch(()=>{});
+    });
+  } 
+  else if (v.canPlayType('application/vnd.apple.mpegurl')) {
+    v.src = src;
+    v.load();
+    v.play().catch(()=>{});
+  }
+
+  playPauseBtn.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause';
+  return;
+}
+
+
       // MP4
       if (isMP4(src)) {
         const v = document.getElementById(modalVideoId);
@@ -752,14 +798,14 @@ iframe:-webkit-full-screen {
         div.innerHTML = `
           <div class="relative overflow-hidden rounded-t-lg">
             <img src="${movie.image}" alt="${movie.title}" class="w-full h-full object-cover movie-poster">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 sm:p-4">
-              <button class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium sm:font-bold py-1 px-3 sm:py-2 sm:px-4 rounded-full transition transform hover:scale-105 text-sm sm:text-base">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-2 sm:p-4">
+              <button class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-1 px-2 sm:py-2 sm:px-4 rounded-full transition transform hover:scale-105 text-xs sm:text-sm">
                 <i class="fas fa-play mr-1 sm:mr-2"></i> Watch Now
               </button>
             </div>
           </div>
-          <div class="p-3 sm:p-4">
-            <h3 class="font-medium sm:font-semibold text-base sm:text-lg truncate">${movie.title}</h3>
+          <div class="p-2 sm:p-3 md:p-4">
+            <h3 class="font-semibold text-sm sm:text-base md:text-lg truncate">${movie.title}</h3>
             <div class="flex justify-between items-center mt-1 sm:mt-2 text-xs sm:text-sm text-gray-400">
               <span>${movie.year}</span>
               <span>${movie.duration}</span>
@@ -866,7 +912,7 @@ iframe:-webkit-full-screen {
 
 </script>
 
- <!-- ========================================= -->
+<!-- ========================================= -->
 <!--        ADSTERRA FULL GLOBAL AD BLOCK      -->
 <!-- ========================================= -->
 
@@ -917,6 +963,7 @@ iframe:-webkit-full-screen {
 <!--           END ADSTERRA BLOCK              -->
 <!-- ========================================= -->
 
- 
+
+
 </body>
 </html>
