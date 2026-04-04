@@ -352,14 +352,17 @@ iframe:-webkit-full-screen {
 <script>
 /* Movie list */
 const movies = [
- { title: "क्रांतिज्योती विद्यालय मराठी माध्यम", url: "https://sw5.platformknowledge.site:443/v4/x6b/xu6xb1/index-f2-v1-a1.txt", image: "https://marathimovieworld.com/images/krantijyoti-vidyalay-marathi-madhyam-poster-big.jpg" },
+ { title: "क्रांतिज्योती विद्यालय मराठी माध्यम", url: "https://mega.nz/embed/OlY0TLyQ#BLWcuSf_ORVzWgPBoFYXrqSDFJ-t8ufSRMRfA0haOiw", image: "https://marathimovieworld.com/images/krantijyoti-vidyalay-marathi-madhyam-poster-big.jpg" },
+ { title: "दुकान", url: "https://mega.nz/embed/ysozQJ4S#6-S3YhHzuORs4UGdwDIakEnDnZfLEmzmrWbu4VJKbbo", image: "https://cdn.district.in/movies-assets/images/cinema/Dukan%20(1)-255a9c40-1dd9-11f1-9a5c-6f32de6382cf.jpg?format=webp&imwidth=256" },
+ { title: "लग्नाचा शॉट", url: "https://s3u.novaquestbranding.cyou:443/v4/rw/1crzk1/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/g9HZNWceR17jXgHmgDubmJlH7Br.jpg" },
+ { title: "तिघी", url: "https://mega.nz/embed/e1RSiBZD#Wak5a6laS1mYt7_ZpA6TAPGYffhZdJQqMaHjsVMA1cU", image: "https://image.tmdb.org/t/p/w500/jt6dTOtur23riqQYfahi7li4rWZ.jpg" },
+ { title: "माया", url: "https://mega.nz/embed/m5hkQDgT#KI0UVqeNsv1_IgixtSOddOG_d6yi6X1m7OaN1E-bkDo", image: "https://atishmkv3.bond/wp-content/uploads/2026/03/Maya-2026.jpg" },
+ { title: "अगं अगं सुनबाई! काय म्हणताय सासूबाई?", url: "https://mega.nz/embed/r1IQFZRJ#rELSRCpcujn1mEXsBHF2IWGTMIFq1NLHqBCu3vWVLV8", image: "https://image.tmdb.org/t/p/w500/o7VaQgNixd6PwsQveOYUpiXwMyZ.jpg" },
+ { title: "भिडेवाडा", url: "https://mega.nz/embed/q1BjXR5b#D8lA9FWxNlio3uTyEwJsQ-S62-SNm_Ow874GNbp732o", image: "https://image.tmdb.org/t/p/w500/o1dbzaNubvAxtmeskKCh5Sa6OtJ.jpg" },
  { title: "आशा", url: "https://sw5.oakridgecreativecollect.sbs:443/v4/urp/fdtdsg/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/9HLCpSWPYOvhFKvNnp5P0SnnL98.jpg" },
  { title: "एप्रिल मे '९९", url: "https://s3u.auroriontravel.shop/v4/bgm/fsg5y/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/loJIjZG3eMA3j0zkjtygp8weoR4.jpg" },
  { title: "गोंधळ", url: "https://mega.nz/embed/sFNwRJTJ#T7aKbcayFqgcK0utTzhEJfPtRdSsAZNl__AcYCZ_LI0", image: "https://image.tmdb.org/t/p/w500/j8yda2b6RD7NMlbV7NaUAj6hr5G.jpg" },
  { title: "आता थांबायचं नाय!", url: "https://sxd.aurorapathstudios.space:443/v4/k5/lwfdk/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/p5MdqQBW9bk3g5WkNjxUk55fWeI.jpg" },
- { title: "कलरफूल", url: "https://sni.auroriontravel.shop/v4/jcp/cmlrui/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/2bdodiRHY4D4wIQ7KoHc6OtAkdb.jpg" },
- { title: "कुलुप", url: "https://spuc.claravonartistrylab.store:443/v4/5w3/6pzm5e/index-f2-v1-a1.txt", image: "https://static.toiimg.com/photo/msid-111924047/111924047.jpg?134446" },
- { title: "विशू", url: "https://s8i.clarionedgeventures.sbs/v4/jcp/zbkydn/index-f2-v1-a1.txt", image: "https://c.saavncdn.com/125/Vishu-Marathi-2022-20220322103412-500x500.jpg" },
  { title: "नाच गं घुमा", url: "https://s3u.petcare.cfd/v4/n8l/dnleai/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/5oNUkuyRSLf2dBErtNIH6C9osJ3.jpg" },
  { title: "नवरदेव-बीएससी अ‍ॅग्री", url: "https://mega.nz/embed/9NFkyTZC#PIAStQ41b2bNICshrnizx5h6iPOxP2Jc1JOjsYBBFIg", image: "https://m.media-amazon.com/images/M/MV5BMWJhYzUyNWUtNmY0NC00NTA3LTkxZTgtODZhZjNkZjEzMGIxXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" },
  { title: "सायकल", url: "https://www.youtube.com/watch?v=QmUUNv5Gqrs", image: "https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p15473483_p_v8_aa.jpg" },
@@ -409,8 +412,9 @@ const movies = [
  { title: "शिवप्रताप गरुडझेप", url: "https://drive.google.com/file/d/1X-z1n7TaLfeHUS54URe6cYmR9uFb6KT1/preview", image: "https://www.loksatta.com/wp-content/uploads/2022/09/Shivpratap-Garudjhep-Cast-2.jpg?w=350" },
  { title: "हिरकणी", url: "https://drive.google.com/file/d/1kcjXftfjQzzfmBhKXXNv0ZqeN9CB8zsR/preview", image: "https://m.media-amazon.com/images/M/MV5BMDRlZGNlY2MtMzZmZi00Yjg1LTliNDgtZjZhZmJmZGQxOGM5XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" },
  { title: "शिवरायांचा छावा", url: "https://drive.google.com/file/d/1qnuEq-66vaxVPzfsHAL2E346kQVjvB45/preview", image: "https://m.media-amazon.com/images/M/MV5BMjhkMTI5MTktMjc0MC00N2I3LWFlMGMtOTY0YmNmYzJlNTM3XkEyXkFqcGc@._V1_.jpg" },
+ { title: "रणपती शिवराय स्वारी आग्राा", url: "https://drive.google.com/file/d/18EP8hK7PnIXuckjz0uqY-o5tDKJXxdB1/preview", image: "https://in.bmscdn.com/events/moviecard/ET00476714.jpg" },
  { title: "धर्मरक्षक महावीर छत्रपती संभाजी महाराज", url: "https://drive.google.com/file/d/1y8foBArRlApJl7mzHGbWdWa0izC-GMP7/preview", image: "https://m.media-amazon.com/images/M/MV5BOTA3ZjJjYjMtNWY1Ni00NWUzLTkwZTEtZTViMGVhYzMwNDE5XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" },
- { title: "उबुंटू", url: "https://mega.nz/embed/dJMAnJrD#eLXG3SZn3298ChmWD74qZvEnYT4BmcH5Rf2VXxU-bpQ", image: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=768,h=934,fit=crop,trim=0;3.7518610421836227;0;0/AR057846rnuEgENP/d6a7xdkuuaactxu-AMqxj5P8PNHe9vOa.jpeg" },
+ { title: "उबुंटू", url: "https://mega.nz/embed/dJMAnJrD#eLXG3SZn3298ChmWD74qZvEnYT4BmcH5Rf2VXxU-bpQ", image: "https://image.tmdb.org/t/p/w500/pokht6u6inlHIKOR2kvat9yx5AF.jpg" },
  { title: "काय द्याचं बोला", url: "https://mega.nz/embed/JANGiCJI#2nHTBjMIsqtuNFXeERULTtjTJjhueynsZ4vRKPyEDDI", image: "https://m.media-amazon.com/images/M/MV5BNTAyNTA2ODc5NF5BMl5BanBnXkFtZTcwMTg3MjgyOQ@@._V1_FMjpg_UX1000_.jpg" },
  { title: "गोष्ट छोटी डोंगरेवाधी", url: "https://mega.nz/embed/hZElyJib#qSK6tHHl6icihPuID4huE9KsPx0yGBHwPGi2gvuPMgs", image: "https://upload.wikimedia.org/wikipedia/en/3/38/Goshta_choti.jpg" },
  { title: "कट्यार काळजात घुसली", url: "https://mega.nz/embed/dFMmBIYS#4l75_FzaKCC-Au-t6LBLkEbwZ4dkzQceYFJEt9TV81o", image: "https://upload.wikimedia.org/wikipedia/en/3/35/Katyar_Kaljat_Ghusali_%28film%29.jpg" },
@@ -424,6 +428,7 @@ const movies = [
  { title: "जाऊ तिथे खाऊ", url: "https://mega.nz/embed/5JsFUDYK#48VG51VErPJ3232Q81WnGf2_YE7xNm2CFj-P48rcrXM", image: "https://m.media-amazon.com/images/M/MV5BY2I5NDQ1MjItMGMxNy00NjYzLWIwM2ItODE5OTczYzljNzU0XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" },
  { title: "एलिझाबेथ एकादशी", url: "https://mega.nz/embed/FINSkLRC#7LYVUT4sb4fZYl9oYFfyD3HsHURSBuXdaZ0893wc4Js", image: "https://upload.wikimedia.org/wikipedia/en/thumb/4/4c/Elizabeth_Ekadashi_Film_Poster.jpg/250px-Elizabeth_Ekadashi_Film_Poster.jpg" },
  { title: "पांडू", url: "https://mega.nz/embed/0VsmESqS#rgTkoF0e1-rLFbPLInSpN-OyOiyd-oKTDnlDnHBkQ-M", image: "https://m.media-amazon.com/images/M/MV5BZjc2Y2UzNTctZjM3YS00Mzc2LTk3ZTYtMmFhMzA2YmE1NmEwXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" },
+ { title: "मुळशी पॅटर्न", url: "https://mega.nz/embed/3pA11CTa#5CKxRW88oSsr8vULXCE13klvLELE8iUQgGpQKzssrPE", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5jmPmTrvUJYpswRV42IT1WzUgUiG9XD6xkQ&s" },
  { title: "मुरांबा", url: "https://sw5.meadowstoneinnovationworks.space:443/v4/xq/hejblr/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/8yFpV5mVZZ8VfWfzINd6kB01Llz.jpg" },
 { title: "येक नंबर", url: "https://sxd.clarionedgeventures.sbs:443/v4/np/oxv3yn/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/tM0BH9by7nfPIeTubP2djJwHmvP.jpg" },
 { title: "लोकमान्य: एक युगपुरुष", url: "https://suw.oakridgecreativecollect.sbs/v4/us/w8upbc/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w500/iGzM2HtGAlaH1vPwmOSgRgryXHA.jpg" },
@@ -772,8 +777,7 @@ enable3DEffects();
 
 
 </script>
-
-<!-- ========================================= -->
+ <!-- ========================================= -->
 <!--        ADSTERRA FULL GLOBAL AD BLOCK      -->
 <!-- ========================================= -->
 
@@ -818,12 +822,11 @@ enable3DEffects();
 <script type="text/javascript" src="//bowlingprosperhalfbrother.com/2d/95/e8/2d95e8d5c6532307745afa9b1be1162b.js"></script>
 
 <!-- ===== PopUnder (Site B) – keep LAST ===== -->
-<script src="https://contentblanksupersede.com/56/61/c1/5661c15aebfd7d940105d7c42e76b1cc.js"></script>
+<script src="https://bendspecimen.com/56/61/c1/5661c15aebfd7d940105d7c42e76b1cc.js"></script>
 
 <!-- ========================================= -->
 <!--           END ADSTERRA BLOCK              -->
 <!-- ========================================= -->
 
- 
 </body>
 </html>
