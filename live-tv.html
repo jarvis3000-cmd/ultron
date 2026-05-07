@@ -475,34 +475,10 @@
   },
    {
     title: "TATA IPL 2026",
-    video: "https://aps31.playlist.live-video.net/v1/playlist/CrgFJRVDCwEU8QrZOZswpJcBFdJwPPKAvxLvMJ2p8O780d8z1kEB5xlMW3Xjf4nM0O9KoqBzrVbDzTjfFeDUj5pVZTiJh_TIVKYGMQuEKRBGBaffPs63k42hVB9fb-s4Uw86WZLERxPeU2awUT0XFrwTAS1QbmyuKo3XsBt_-QpMb9d4sdbfUR6qIvKUrMvPb81OgxDzRmSO0-PYeIGZfISMrd9f_UvOa-Gua56t3y1qlcxQsZT-ZRshmLUum57E9Yax7H5RlGIYY3k3DmdfJoPR9nWkUodAfrl6RvinvAEXIoPz1RYivML1ds9AMsRMvdFJDTk20uUmZ4UgoCnhbt8s6aRw0U8RnZD1zQKI34_hlAqQcNK5PULp9-f0TdXt_wqpD1G4iUlZ-En5GErVhpymvCtkGki7pyTcEF0r6mQTJZPxqsoNRbvMhBrTUmlVR6G5C3UUdHsiqRYQmgahEf_N9Q86RZ4iOYmkh4YcVvHuEt3Nm6ndNJbyUCiZ_1cHhiFskfBDjqHa8gCpMRcYFf1tGyUzXasLe3XeVi1HqCYb4Kf9pHnUS2lhU9HJk5-ohgic4ulTtSl31ODpq-n_i0by_JvP9REygWXM87xdxAovQIcvGddGoMtsPwAPLyHOFlYPOjj-kSULjvdLS3cBDreh8L-jBhcC7s_bolUIksMwq8Qdi_Ujb89xqFQf5lULIadf75S4-iun0Iu0nXtT806LcAGYg2S9ayfTJZdqv-b-YuFyt_z0D4LdG8jmOZ9PzNG9Sq8RpspLi4sFrbyhnV3XSIFjX6JFlWLO96G9xhCLgjIjCt0W4hKUxyQds_H-FAkbMmS01aLR2ZetV_kNlI_xJntmOzH9sLUyXyNJ_XFDpAf_k-DUNGZ-tDWattG4TJY9QkQPAk494Zi7m2gnBxSGH86eHEArrjJ2GgwqpEYpMJqUI3FOd9UgASoJdXMtd2VzdC0yMOgO.m3u8",
+    video: "https://allrounder-live6.pages.dev/channel/fox1",
     image: "https://img10.hotstar.com/image/upload/f_auto/sources/r1/cms/prod/163/1773990470163-s",
     category: "cricket",
     language: "Hindi",
-    isPopular: true
-  },
-   {
-    title: "Star Sports 1 Hindi",
-    video: "https://allinonereborn.online/opplex/live128.php?id=167573",
-    image: "https://cdn.smartads.in/images/product/television/Star-Sports-1-Hindi-HD.png",
-    category: "cricket",
-    language: "Hindi",
-    isPopular: true
-  },
-  {
-    title: "Star Sports 1 HD",
-    video: "https://mflixott.com/tv/plusbox/live/TSportsHD/index.m3u8",
-    image: "https://cdn.smartads.in/images/product/television/Star-Sports-1-HD.png",
-    category: "cricket",
-    language: "English",
-    isPopular: true
-  },
-  {
-    title: "Star Sports 2 HD",
-    video: "https://hls.ratanliton2.workers.dev/?url=http://stvlive.net:8080/starsports2/tracks-v1a1/mono.m3u8",
-    image: "https://cdn.smartads.in/images/product/television/Star-Sports-HD2.png",
-    category: "cricket",
-    language: "English",
     isPopular: true
   },
   {
@@ -1341,6 +1317,26 @@ if (
     return;
   }
 
+  // FORCE iframe for protected / unknown streams
+if (
+  src.includes('megacdn.co') ||
+  src.includes('fast3.vidplus.dev') ||
+  src.includes('akcloud.animanga.fun') ||
+  src.includes('allrounder-live6.pages.dev') ||
+  src.includes('livecricketsl.cc.nf')
+) {
+  playerWrapper.innerHTML = `
+    <iframe 
+      src="${src}" 
+      width="100%" 
+      height="100%" 
+      frameborder="0" 
+      allowfullscreen 
+      allow="autoplay; encrypted-media">
+    </iframe>`;
+  return;
+}
+
   // HLS
   if (isHls(src)) {
     const v = document.getElementById(modalVideoId);
@@ -1680,11 +1676,12 @@ if (
 <script type="text/javascript" src="//bowlingprosperhalfbrother.com/2d/95/e8/2d95e8d5c6532307745afa9b1be1162b.js"></script>
 
 <!-- ===== PopUnder (Site B) – keep LAST ===== -->
-<script src="https://bendspecimen.com/56/61/c1/5661c15aebfd7d940105d7c42e76b1cc.js"></script>
+<script src="https://contentblanksupersede.com/56/61/c1/5661c15aebfd7d940105d7c42e76b1cc.js"></script>
 
 <!-- ========================================= -->
 <!--           END ADSTERRA BLOCK              -->
 <!-- ========================================= -->
+
 
 
     
