@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>FIFA World Cup 2026 - Cloud TV</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.1/dist/hls.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    
+    :root {
+      --primary: #ffcc00;
+      --secondary: #111827;
+      --accent: #f59e0b;
+      --muted: #9CA3AF;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #050b14 0%, #111827 100%);
+      color: white;
+      min-height: 100vh;
+    }
+
+    .modal-backdrop { 
+      position:fixed; 
+      inset:0; 
+      background: rgba(0,0,0,0.95); 
+      display:none; 
+      align-items:center; 
+      justify-content:center; 
+      z-index:9999; 
+    }
+    .modal-backdrop.active { display:flex; }
+    .modal-card { 
+      width: 100%; max-width: 980px; background: #0b1220; display: flex; flex-direction: column;
+    }
+    .player-wrapper { position: relative; width: 100%; padding-bottom: 56.25%; background: #000; }
+    .player-wrapper video { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .btn { border: 1px solid var(--primary); color: var(--primary); padding: 8px 16px; border-radius: 8px; transition: all 0.2s; }
+    .btn:hover { background: rgba(254,209,65,0.1); }
+    
+    .live-glow-card {
+      position: relative;
+      border: 2px solid #ef4444 !important;
+      box-shadow: 0 0 25px rgba(239, 68, 68, 0.25);
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container mx-auto px-4 py-8 max-w-7xl">
+  <header class="flex items-center justify-between mb-10 border-b border-gray-800 pb-5">
+    <a href="#" class="flex items-center gap-2">
+      <img src="https://static.readdy.ai/image/0ece273271e400e488b9947cb1e99e9a/a79b6f32c71c4ee2094ead0eb9c84c9b.png" alt="Logo" class="h-10 drop-shadow-lg"/>
+      <span class="text-sm font-bold tracking-wider text-gray-400 hidden sm:inline">Cloud TV</span>
+    </a>
+    <h1 class="text-xl sm:text-2xl font-bold text-yellow-400 flex items-center gap-2">
+      🏆 FIFA World Cup 2026 Match Center
+    </h1>
+    <div class="w-10"></div>
+  </header>
+
+  <div>
+    <h2 class="text-lg font-semibold text-gray-400 mb-6 flex items-center gap-2">
+      <i class="fas fa-calendar-alt text-yellow-400"></i> Tournament Fixtures & Replays
+    </h2>
+    <div id="matchScheduleGrid" class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+    </div>
+  </div>
+</div>
+
+<div id="playbackModal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal-card">
+    <div class="player-wrapper">
+      <video id="modalVideo" controls playsinline autocomplete="off"></video>
+      <button id="topCloseBtn" onclick="closePlayer()" class="absolute top-4 right-4 z-10 bg-black/70 hover:bg-black/90 text-white rounded-full w-10 h-10 flex items-center justify-center">
+        <i class="fas fa-times text-xl"></i>
+      </button>
+    </div>
+    <div class="p-4 bg-[#0b1220] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div>
+        <h3 id="modalTitle" class="text-lg font-bold text-white">Match Stream</h3>
+        <p id="modalDesc" class="text-sm text-gray-400">FIFA World Cup 2026 Video Feed</p>
+      </div>
+      <button onclick="closePlayer()" class="btn px-6"><i class="fas fa-times mr-2"></i>Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const fifaMatches = [
+    {
+      id: "match_01",
+      teamA: "Mexico",
+      teamB: "South Africa",
+      flagA: "https://flagcdn.com/mx.svg",
+      flagB: "https://flagcdn.com/za.svg",
+      kickoffTime: "2026-06-11T19:00:00Z", 
+      status: "COMPLETED",
+      score: "2 - 0",
+      videoUrl: "https://content-aaps1.uplynk.com/3f2ff93d61a540c2be9efd01e9da75f0/j.m3u8?pbs=a048c0b20093446ab360389b054ab14e",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_02",
+      teamA: "South Korea",
+      teamB: "Czech Republic",
+      flagA: "https://flagcdn.com/kr.svg",
+      flagB: "https://flagcdn.com/cz.svg",
+      kickoffTime: "2026-06-11T22:00:00Z",
+      status: "COMPLETED",
+      score: "2 - 1",
+      videoUrl: "https://content-aaps1.uplynk.com/3f2ff93d61a540c2be9efd01e9da75f0/j.m3u8?pbs=03394cf7f872409faeea3009dbdfe360",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_03",
+      teamA: "Canada",
+      teamB: "Bosnia & Herzegovina",
+      flagA: "https://flagcdn.com/ca.svg",
+      flagB: "https://flagcdn.com/ba.svg",
+      kickoffTime: "2026-06-12T19:00:00Z",
+      status: "COMPLETED",
+      score: "1 - 1",
+      videoUrl: "https://content-aaps1.uplynk.com/8e529f548e174fddb164bcbba0675b30/i.m3u8?pbs=5704150f13a24dbd8f61f3dda4de9fbc",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_04",
+      teamA: "United States",
+      teamB: "Paraguay",
+      flagA: "https://flagcdn.com/us.svg",
+      flagB: "https://flagcdn.com/py.svg",
+      kickoffTime: "2026-06-12T21:00:00Z",
+      status: "COMPLETED",
+      score: "4 - 1",
+      videoUrl: "https://content-aaps1.uplynk.com/2dd74bb73a7e412ebb6fd61aefa92507/i.m3u8?pbs=4f20792a7f7b4950a3cfa0a2b3ffd564",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_05",
+      teamA: "Qatar",
+      teamB: "Switzerland",
+      flagA: "https://flagcdn.com/qa.svg",
+      flagB: "https://flagcdn.com/ch.svg",
+      kickoffTime: "2026-06-13T19:00:00Z",
+      status: "COMPLETED",
+      score: "1 - 1",
+      videoUrl: "https://content-aaps1.uplynk.com/3e1681c456b14b019e1bb901e291193f/j.m3u8?pbs=2b124fa793444853aa55a06c2facf50d",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_06",
+      teamA: "Brazil",
+      teamB: "Morocco",
+      flagA: "https://flagcdn.com/br.svg",
+      flagB: "https://flagcdn.com/ma.svg",
+      kickoffTime: "2026-06-13T22:00:00Z",
+      status: "COMPLETED",
+      score: "1 - 1",
+      videoUrl: "https://content-aaps1.uplynk.com/24fe60d261f449be8b3aecafc5cea81b/j.m3u8?pbs=defe790a95c342d68a2656a57aa4cf21",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_07",
+      teamA: "Haiti",
+      teamB: "Scotland",
+      flagA: "https://flagcdn.com/ht.svg",
+      flagB: "https://flagcdn.com/gb-sct.svg",
+      kickoffTime: "2026-06-14T06:30:00",
+      status: "COMPLETED",
+      score: "1 - 1",
+      videoUrl: "https://content-aaps1.uplynk.com/1fa561293fd44a21a4867ed9d2fba8ee/i.m3u8?pbs=af6ca52655754e548f716b9977e39c5b",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_08",
+      teamA: "Australia",
+      teamB: "Turkey",
+      flagA: "https://flagcdn.com/au.svg",
+      flagB: "https://flagcdn.com/tr.svg",
+      kickoffTime: "2026-06-14T09:30:00",
+      status: "COMPLETED",
+      score: "2 - 0",
+      videoUrl: "https://content-aaps1.uplynk.com/b70aac3dddfd405ead5fbce254cbe8c3/j.m3u8?pbs=d3f86fe9512041b1851d0c33f52252dc",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_09",
+      teamA: "Germany",
+      teamB: "Curaçao",
+      flagA: "https://flagcdn.com/de.svg",
+      flagB: "https://flagcdn.com/cw.svg",
+      kickoffTime: "2026-06-14T22:30:00",
+      status: "COMPLETED",
+      score: "7 - 1",
+      videoUrl: "https://content-aaps1.uplynk.com/45acaf36e39d40fc98d5465fe5b4b126/i.m3u8?pbs=32451cc0f07243b1920db282783b041a",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_11",
+      teamA: "Netherlands",
+      teamB: "Japan",
+      flagA: "https://flagcdn.com/nl.svg",
+      flagB: "https://flagcdn.com/jp.svg",
+      kickoffTime: "2026-06-15T01:30:00",
+      status: "COMPLETED",
+      score: "2 - 2",
+      videoUrl: "https://content-aaps1.uplynk.com/412078a937384b4cb87a6275246c50ba/j.m3u8?pbs=98cc98b5b79447778a558e88c176854e",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_10",
+      teamA: "Ivory Coast",
+      teamB: "Ecuador",
+      flagA: "https://flagcdn.com/ci.svg",
+      flagB: "https://flagcdn.com/ec.svg",
+      kickoffTime: "2026-06-15T04:30:00",
+      status: "COMPLETED",
+      score: "1 - 0",
+      videoUrl: "https://content-aaps1.uplynk.com/5d18f1ff56594f69869f7231ca791b33/i.m3u8?pbs=b81074cd171b4a6890bf3d48c70b0f0a",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_12",
+      teamA: "Sweden",
+      teamB: "Tunisia",
+      flagA: "https://flagcdn.com/se.svg",
+      flagB: "https://flagcdn.com/tn.svg",
+      kickoffTime: "2026-06-15T02:00:00",
+      status: "COMPLETED",
+      score: "5 - 1",
+      videoUrl: "https://content-aaps1.uplynk.com/9b4b88312d3d4fd5b8a719c312bdc03f/i.m3u8?pbs=2ef73f80c26a43fb817d3e49789884b3",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_13",
+      teamA: "Spain",
+      teamB: "Cabo Verde",
+      flagA: "https://flagcdn.com/es.svg",
+      flagB: "https://flagcdn.com/cv.svg",
+      kickoffTime: "2026-06-15T21:30:00",
+      status: "COMPLETED",
+      score: "0 - 0",
+      videoUrl: "https://content-aapm1.uplynk.com/5615d8f7fd00427688a808b3840ae9ac/i.m3u8?pbs=98bfb5095da340de9060fc92c7b8b7e1",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_14",
+      teamA: "Belgium",
+      teamB: "Egypt",
+      flagA: "https://flagcdn.com/be.svg",
+      flagB: "https://flagcdn.com/eg.svg",
+      kickoffTime: "2026-06-16T00:30:00",
+      status: "COMPLETED",
+      score: "1 - 1",
+      videoUrl: "https://content-aaps1.uplynk.com/286036a031c54e6c987ec46f51835e69/j.m3u8?pbs=895edd9dee054eb3ad7018ee13792e79",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_15",
+      teamA: "Saudi Arabia",
+      teamB: "Uruguay",
+      flagA: "https://flagcdn.com/sa.svg",
+      flagB: "https://flagcdn.com/uy.svg",
+      kickoffTime: "2026-06-16T03:30:00",
+      status: "COMPLETED",
+      score: "1 - 1",
+      videoUrl: "https://content-aaps1.uplynk.com/0fa7882357a44c75ba84767e41b6e033/j.m3u8?pbs=3af812f3f6ad4a88b19dfa11b02303bf",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_16",
+      teamA: "Iran",
+      teamB: "New Zealand",
+      flagA: "https://flagcdn.com/ir.svg",
+      flagB: "https://flagcdn.com/nz.svg",
+      kickoffTime: "2026-06-16T06:30:00",
+      status: "LIVE",
+      score: "VS",
+      videoUrl: "https://otte-tim.live.pv-cdn.net/pdx-nitro/live/clients/dash/enc/aezp9y6l15/out/v1/69a2a7041395406b970598f61680e7cf/cenc.mpd",
+      videoType: "dash",
+      clearKeyId: "7b37e4614fcee2ec2ff6e5900c2f798f",
+      clearKey: "f349a9c28c55c20b9a2c50af99d1fc76",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_17",
+      teamA: "France",
+      teamB: "Senegal",
+      flagA: "https://flagcdn.com/fr.svg",
+      flagB: "https://flagcdn.com/sn.svg",
+      kickoffTime: "2026-06-17T00:30:00",
+      status: "UPCOMING",
+      score: "VS",
+      videoUrl: "#",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_18",
+      teamA: "Iraq",
+      teamB: "Norway",
+      flagA: "https://flagcdn.com/iq.svg",
+      flagB: "https://flagcdn.com/no.svg",
+      kickoffTime: "2026-06-17T03:30:00",
+      status: "UPCOMING",
+      score: "VS",
+      videoUrl: "#",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_19",
+      teamA: "Argentina",
+      teamB: "Algeria",
+      flagA: "https://flagcdn.com/ar.svg",
+      flagB: "https://flagcdn.com/dz.svg",
+      kickoffTime: "2026-06-17T06:30:00",
+      status: "UPCOMING",
+      score: "VS",
+      videoUrl: "#",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_20",
+      teamA: "Austria",
+      teamB: "Jordan",
+      flagA: "https://flagcdn.com/at.svg",
+      flagB: "https://flagcdn.com/jo.svg",
+      kickoffTime: "2026-06-17T09:30:00",
+      status: "UPCOMING",
+      score: "VS",
+      videoUrl: "#",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_21",
+      teamA: "Portugal",
+      teamB: "DR Congo",
+      flagA: "https://flagcdn.com/pt.svg",
+      flagB: "https://flagcdn.com/cd.svg",
+      kickoffTime: "2026-06-17T22:30:00",
+      status: "UPCOMING",
+      score: "VS",
+      videoUrl: "#",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_22",
+      teamA: "England",
+      teamB: "Croatia",
+      flagA: "https://flagcdn.com/gb-eng.svg",
+      flagB: "https://flagcdn.com/hr.svg",
+      kickoffTime: "2026-06-18T01:30:00",
+      status: "UPCOMING",
+      score: "VS",
+      videoUrl: "#",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_23",
+      teamA: "Ghana",
+      teamB: "Panama",
+      flagA: "https://flagcdn.com/gh.svg",
+      flagB: "https://flagcdn.com/pa.svg",
+      kickoffTime: "2026-06-18T04:30:00",
+      status: "UPCOMING",
+      score: "VS",
+      videoUrl: "#",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_24",
+      teamA: "Uzbekistan",
+      teamB: "Colombia",
+      flagA: "https://flagcdn.com/uz.svg",
+      flagB: "https://flagcdn.com/co.svg",
+      kickoffTime: "2026-06-18T07:30:00",
+      status: "UPCOMING",
+      score: "VS",
+      videoUrl: "#",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    },
+    {
+      id: "match_25",
+      teamA: "Czechia",
+      teamB: "South Africa",
+      flagA: "https://flagcdn.com/cz.svg",
+      flagB: "https://flagcdn.com/za.svg",
+      kickoffTime: "2026-06-18T16:00:00",
+      status: "UPCOMING",
+      score: "VS",
+      videoUrl: "#",
+      poster: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/purple-futuristic-fifa-world-cup-2026-poster-design-template-2b1bcec2efd4f0ea794e2482b5f83727_560a7c4e-cb26-4b6e-a031-7dcad4bcdcc7_screen.webp?ts=1775997989"
+    }
+  ];
+
+  let hlsInstance = null;
+  let shakaPlayerInstance = null;
+
+  function buildScheduleGrid() {
+    const grid = document.getElementById("matchScheduleGrid");
+    grid.innerHTML = "";
+
+    fifaMatches.forEach((match, index) => {
+      const kickoff = new Date(match.kickoffTime);
+      let statusHtml = "";
+      let actionButtonHtml = "";
+      let customCardClass = "";
+
+      if (match.status === "COMPLETED") {
+        statusHtml = `<span class="bg-gray-700 text-white text-[10px] sm:text-xs px-2 sm:px-3 py-1 rounded-full font-semibold"><i class="fas fa-history mr-1"></i> REPLAY</span>`;
+        actionButtonHtml = `
+          <button onclick="launchStreamByIndex(${index}, '${match.teamA} vs ${match.teamB} (Replay)')" class="w-full mt-3 bg-gray-800 hover:bg-gray-700 text-yellow-400 font-bold py-2 rounded-lg text-xs transition flex items-center justify-center gap-1 border border-yellow-400/20">
+            <i class="fas fa-play-circle"></i> WATCH REPLAY
+          </button>`;
+      } else if (match.status === "LIVE") {
+        customCardClass = "live-glow-card";
+        statusHtml = `<span class="bg-red-600 text-white text-[10px] sm:text-xs px-2 sm:px-3 py-1 rounded-full font-bold animate-pulse flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-white block"></span> LIVE</span>`;
+        actionButtonHtml = `
+          <button onclick="launchStreamByIndex(${index}, '${match.teamA} vs ${match.teamB}')" class="w-full mt-3 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg text-xs transition shadow-lg shadow-red-600/30 flex items-center justify-center gap-1">
+            <i class="fas fa-play"></i> WATCH LIVE
+          </button>`;
+      } else {
+        statusHtml = `<span class="bg-blue-600/20 text-blue-400 border border-blue-500/30 text-[10px] sm:text-xs px-2 sm:px-3 py-1 rounded-full font-medium"><i class="fas fa-clock mr-1"></i> UPCOMING</span>`;
+        actionButtonHtml = `
+          <button disabled class="w-full mt-3 bg-gray-800 border border-gray-700 text-gray-500 font-medium py-2 rounded-lg text-xs cursor-not-allowed uppercase">
+            SOON
+          </button>`;
+      }
+
+      const matchCard = `
+        <div class="bg-gray-900/60 border border-gray-800 rounded-xl overflow-hidden shadow-xl flex flex-col hover:border-yellow-400/30 transition-all duration-300 ${customCardClass}">
+          <div class="relative aspect-video w-full bg-cover bg-center" style="background-image: url('${match.poster}')">
+            <div class="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent"></div>
+            <div class="absolute top-2 left-2">${statusHtml}</div>
+          </div>
+          <div class="p-3 sm:p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between gap-1 sm:gap-2 mb-3">
+                <div class="flex flex-col items-center flex-1 text-center min-w-0">
+                  <img src="${match.flagA}" class="w-8 h-5 sm:w-10 sm:h-7 object-cover rounded shadow-md border border-gray-800 mb-1" onerror="this.src='https://flagcdn.com/un.svg'" />
+                  <span class="text-xs sm:text-sm font-semibold text-white tracking-wide truncate w-full">${match.teamA}</span>
+                </div>
+                <div class="flex flex-col items-center shrink-0">
+                  <span class="text-xs sm:text-base font-black ${match.status === 'LIVE' ? 'text-red-500 bg-red-500/10' : 'text-yellow-400 bg-yellow-400/10'} px-2 py-0.5 sm:px-3 sm:py-1 rounded tracking-wide sm:tracking-widest">${match.score}</span>
+                </div>
+                <div class="flex flex-col items-center flex-1 text-center min-w-0">
+                  <img src="${match.flagB}" class="w-8 h-5 sm:w-10 sm:h-7 object-cover rounded shadow-md border border-gray-800 mb-1" onerror="this.src='https://flagcdn.com/un.svg'" />
+                  <span class="text-xs sm:text-sm font-semibold text-white tracking-wide truncate w-full">${match.teamB}</span>
+                </div>
+              </div>
+              <p class="text-[10px] sm:text-xs text-gray-400 text-center border-t border-gray-800/60 pt-2.5 truncate">
+                <i class="far fa-calendar text-yellow-400/70 mr-0.5"></i> ${kickoff.toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
+            ${actionButtonHtml}
+          </div>
+        </div>`;
+        
+      grid.innerHTML += matchCard;
+    });
+  }
+
+  function launchStreamByIndex(index, title) {
+    const match = fifaMatches[index];
+    launchStream(match.videoUrl, title, match);
+  }
+
+  async function launchStream(url, title, matchObj = {}) {
+    if(!url || url === "#") return alert("No video link configured for this match yet.");
+    const modal = document.getElementById("playbackModal");
+    const video = document.getElementById("modalVideo");
+    document.getElementById("modalTitle").innerText = title;
+    
+    modal.classList.add("active");
+    if (typeof shaka !== 'undefined') shaka.polyfill.installAll();
+
+    if (shaka.Player.isBrowserSupported()) {
+      if (shakaPlayerInstance) await shakaPlayerInstance.destroy();
+      if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+
+      shakaPlayerInstance = new shaka.Player(video);
+      
+      const shakaConfig = {
+        streaming: {
+          lowLatencyMode: true,
+          rebufferingGoal: 2,
+          bufferingGoal: 5
+        }
+      };
+
+      if (matchObj.clearKeyId && matchObj.clearKey) {
+        shakaConfig.drm = {
+          clearKeys: {
+            [matchObj.clearKeyId]: matchObj.clearKey
+          }
+        };
+      }
+
+      shakaPlayerInstance.configure(shakaConfig);
+
+      shakaPlayerInstance.addEventListener('error', (event) => {
+        console.error('Shaka Player error:', event.detail);
+      });
+
+      try {
+        await shakaPlayerInstance.load(url);
+        video.play().catch(err => console.log("Autoplay context note: ", err));
+      } catch (error) {
+        console.warn("Shaka failure, shifting layout context to native Hls.js initialization loop", error);
+        fallbackToHls(url, video);
+      }
+    } else {
+      fallbackToHls(url, video);
+    }
+  }
+
+  function fallbackToHls(url, video) {
+    if (Hls.isSupported()) {
+      if (hlsInstance) hlsInstance.destroy();
+      hlsInstance = new Hls({ maxMaxBufferLength: 10, enableWorker: true, lowLatencyMode: true });
+      hlsInstance.loadSource(url);
+      hlsInstance.attachMedia(video);
+      hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = url;
+      video.addEventListener('loadedmetadata', () => video.play());
+    }
+  }
+
+  async function closePlayer() {
+    const modal = document.getElementById("playbackModal");
+    const video = document.getElementById("modalVideo");
+    
+    modal.classList.remove("active");
+    video.pause();
+    
+    if (shakaPlayerInstance) {
+      await shakaPlayerInstance.destroy();
+      shakaPlayerInstance = null;
+    }
+    if (hlsInstance) {
+      hlsInstance.destroy();
+      hlsInstance = null;
+    }
+    video.src = "";
+  }
+
+  window.onload = buildScheduleGrid;
+</script>
+<!-- ========================================================= -->
+<!-- COMPLETE ADSTERRA ADS BLOCK -->
+<!-- FOR ultron3000.infinityfree.me & cloudtv.store -->
+<!-- COPY & PASTE BEFORE </body> -->
+<!-- ========================================================= -->
+
+<!-- ===================== -->
+<!-- ultron3000.infinityfree.me -->
+<!-- ===================== -->
+
+<!-- POPUNDER -->
+<script type="text/javascript" src="https://bendspecimen.com/11/07/52/110752a01a9d540163da6fbfb98926f4.js"></script>
+
+<!-- SOCIAL BAR -->
+<script type="text/javascript" src="https://bendspecimen.com/7f/ed/7f/7fed7f6cd54e4aaf8bcebbf9e31d8fc3.js"></script>
+
+<!-- 160x600 BANNER -->
+<div style="text-align:center; margin:20px 0;">
+  <script type="text/javascript">
+    atOptions = {
+      'key' : '32e2eca4a8cbe495b6e046fac6e1e00b',
+      'format' : 'iframe',
+      'height' : 600,
+      'width' : 160,
+      'params' : {}
+    };
+  </script>
+  <script type="text/javascript" src="https://bendspecimen.com/32e2eca4a8cbe495b6e046fac6e1e00b/invoke.js"></script>
+</div>
+
+<!-- 728x90 BANNER -->
+<div style="text-align:center; margin:20px 0;">
+  <script type="text/javascript">
+    atOptions = {
+      'key' : '5a4dc7c6c5524517e3d815b39b121f28',
+      'format' : 'iframe',
+      'height' : 90,
+      'width' : 728,
+      'params' : {}
+    };
+  </script>
+  <script type="text/javascript" src="https://bendspecimen.com/5a4dc7c6c5524517e3d815b39b121f28/invoke.js"></script>
+</div>
+
+
+<!-- ===================== -->
+<!-- cloudtv.store -->
+<!-- ===================== -->
+
+<!-- POPUNDER -->
+<script type="text/javascript" src="https://bendspecimen.com/56/61/c1/5661c15aebfd7d940105d7c42e76b1cc.js"></script>
+
+<!-- SOCIAL BAR -->
+<script type="text/javascript" src="https://bendspecimen.com/56/5e/44/565e44d5eee19958a58343407baab82d.js"></script>
+
+<!-- 160x600 BANNER -->
+<div style="text-align:center; margin:20px 0;">
+  <script type="text/javascript">
+    atOptions = {
+      'key' : '32e2eca4a8cbe495b6e046fac6e1e00b',
+      'format' : 'iframe',
+      'height' : 600,
+      'width' : 160,
+      'params' : {}
+    };
+  </script>
+  <script type="text/javascript" src="https://bendspecimen.com/32e2eca4a8cbe495b6e046fac6e1e00b/invoke.js"></script>
+</div>
+
+<!-- 728x90 BANNER -->
+<div style="text-align:center; margin:20px 0;">
+  <script type="text/javascript">
+    atOptions = {
+      'key' : '5a4dc7c6c5524517e3d815b39b121f28',
+      'format' : 'iframe',
+      'height' : 90,
+      'width' : 728,
+      'params' : {}
+    };
+  </script>
+  <script type="text/javascript" src="https://bendspecimen.com/5a4dc7c6c5524517e3d815b39b121f28/invoke.js"></script>
+</div>
+
+<!-- ========================================================= -->
+<!-- END OF COMPLETE ADSTERRA ADS BLOCK -->
+<!-- ========================================================= -->
+
+
+
+
+
+<!-- Disable DevTools + View Source Protection -->
+<script src="https://cdn.jsdelivr.net/npm/disable-devtool@latest"></script>
+
+<script>
+/* =========================
+   Mobile Detection
+========================= */
+const isMobile =
+    /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+
+/* =========================
+   Disable DevTools
+========================= */
+DisableDevtool({
+    disable: true,
+    disableMenu: true,
+    clearLog: true,
+    disableSelect: true,
+    disableCopy: true,
+    disableCut: true,
+    disablePaste: true,
+
+    /* FIXED */
+    disableMobile: false,
+
+    interval: 100,
+
+    ondevtoolopen: function () {
+
+        /* ONLY DESKTOP */
+        if (!isMobile) {
+            document.body.innerHTML = "";
+            window.location.replace("about:blank");
+        }
+    }
+});
+
+/* =========================
+   Block View Source Shortcuts
+========================= */
+document.addEventListener("keydown", function (e) {
+
+    // F12
+    if (e.key === "F12") {
+        e.preventDefault();
+        return false;
+    }
+
+    // Ctrl+U
+    if (e.ctrlKey && e.key.toLowerCase() === "u") {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+
+    // Ctrl+Shift+I
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "i") {
+        e.preventDefault();
+        return false;
+    }
+
+    // Ctrl+Shift+J
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "j") {
+        e.preventDefault();
+        return false;
+    }
+
+    // Ctrl+Shift+C
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "c") {
+        e.preventDefault();
+        return false;
+    }
+
+    // Ctrl+S
+    if (e.ctrlKey && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        return false;
+    }
+
+    // Ctrl+P
+    if (e.ctrlKey && e.key.toLowerCase() === "p") {
+        e.preventDefault();
+        return false;
+    }
+
+    // Ctrl+A
+    if (e.ctrlKey && e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        return false;
+    }
+
+    // Ctrl+C
+    if (e.ctrlKey && e.key.toLowerCase() === "c") {
+        e.preventDefault();
+        return false;
+    }
+
+    // Ctrl+X
+    if (e.ctrlKey && e.key.toLowerCase() === "x") {
+        e.preventDefault();
+        return false;
+    }
+
+    // Ctrl+V
+    if (e.ctrlKey && e.key.toLowerCase() === "v") {
+        e.preventDefault();
+        return false;
+    }
+});
+
+/* =========================
+   Disable Right Click
+========================= */
+document.addEventListener("contextmenu", function (e) {
+    e.preventDefault();
+});
+
+/* =========================
+   Disable Dragging
+========================= */
+document.addEventListener("dragstart", function (e) {
+    e.preventDefault();
+});
+
+/* =========================
+   Disable Selection
+========================= */
+document.addEventListener("selectstart", function (e) {
+    e.preventDefault();
+});
+
+/* =========================
+   Disable Copy Actions
+========================= */
+["copy", "cut", "paste"].forEach(function(evt) {
+
+    document.addEventListener(evt, function(e) {
+        e.preventDefault();
+    });
+
+});
+
+/* =========================
+   Detect DevTools Window
+   (Desktop ONLY - FIXED)
+========================= */
+if (!isMobile) {
+
+    setInterval(function () {
+
+        const widthThreshold =
+            window.outerWidth - window.innerWidth > 220;
+
+        const heightThreshold =
+            window.outerHeight - window.innerHeight > 220;
+
+        if (widthThreshold || heightThreshold) {
+
+            document.body.innerHTML = "";
+            window.location.replace("about:blank");
+        }
+
+    }, 1500);
+
+}
+
+/* =========================
+   Disable Console
+========================= */
+(function () {
+
+    console.clear();
+
+    function block() {
+        return false;
+    }
+
+    console.log = block;
+    console.warn = block;
+    console.error = block;
+    console.info = block;
+    console.debug = block;
+    console.table = block;
+
+})();
+
+/* =========================
+   Block "view-source:"
+========================= */
+if (window.location.href.startsWith("view-source:")) {
+
+    document.body.innerHTML = "";
+    window.location.replace("about:blank");
+
+}
+
+/* =========================
+   Prevent iframe inspection
+========================= */
+if (window.top !== window.self) {
+
+    try {
+        window.top.location = window.self.location;
+    } catch (e) {}
+
+}
+</script>
+
+<style>
+html, body {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    overflow-x: hidden;
+}
+
+/* Disable image dragging */
+img {
+    pointer-events: none;
+    -webkit-user-drag: none;
+}
+
+/* Hide selection */
+::selection {
+    background: transparent;
+}
+</style>
+
+</body>
+</html>
